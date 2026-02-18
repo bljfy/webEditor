@@ -41,6 +41,7 @@ const narrativeSectionSchema = z.object({
   kind: z.literal("narrative"),
   title: z.string().min(1),
   subtitle: z.string().optional(),
+  includeInNav: z.boolean().optional(),
   content: z.object({
     cards: z.array(
       z.object({
@@ -56,6 +57,7 @@ const stripGallerySectionSchema = z.object({
   kind: z.literal("strip-gallery"),
   title: z.string().min(1),
   subtitle: z.string().optional(),
+  includeInNav: z.boolean().optional(),
   content: z.object({
     items: z.array(
       z.object({
@@ -71,6 +73,7 @@ const modelStageSectionSchema = z.object({
   kind: z.literal("model-stage"),
   title: z.string().min(1),
   subtitle: z.string().optional(),
+  includeInNav: z.boolean().optional(),
   content: z.object({
     main: z.object({
       image: imageAssetSchema,
@@ -92,6 +95,7 @@ const atlasGridSectionSchema = z.object({
   kind: z.literal("atlas-grid"),
   title: z.string().min(1),
   subtitle: z.string().optional(),
+  includeInNav: z.boolean().optional(),
   content: z.object({
     items: z.array(
       z.object({
@@ -108,6 +112,7 @@ const masonryGallerySectionSchema = z.object({
   kind: z.literal("masonry-gallery"),
   title: z.string().min(1),
   subtitle: z.string().optional(),
+  includeInNav: z.boolean().optional(),
   content: z.object({
     items: z.array(
       z.object({
@@ -218,6 +223,7 @@ export const defaultPageConfig: PageConfig = {
       kind: "narrative",
       title: "01 项目叙述",
       subtitle: "模板目标和阅读路径",
+      includeInNav: true,
       content: {
         cards: [
           { title: "背景", text: "面向静态部署场景，快速完成单页展示。" },
@@ -231,6 +237,7 @@ export const defaultPageConfig: PageConfig = {
       kind: "strip-gallery",
       title: "02 图纸条带",
       subtitle: "横向滚动展示图纸/素材",
+      includeInNav: true,
       content: {
         items: [
           { image: { src: "https://picsum.photos/seed/strip1/900/640", title: "图纸 A" }, tags: ["总图"] },
@@ -243,6 +250,7 @@ export const defaultPageConfig: PageConfig = {
       kind: "model-stage",
       title: "03 模型阶段",
       subtitle: "主模型 + 次模型",
+      includeInNav: true,
       content: {
         main: { image: { src: "https://picsum.photos/seed/modelmain/1200/900", title: "主模型" }, tags: ["主视角"] },
         secondary: [
@@ -255,6 +263,7 @@ export const defaultPageConfig: PageConfig = {
       kind: "atlas-grid",
       title: "04 场地网格",
       subtitle: "图像与占位混排",
+      includeInNav: true,
       content: {
         items: [
           { image: { src: "https://picsum.photos/seed/atlas1/1200/900", title: "主场地" }, tags: ["场地"] },
@@ -268,6 +277,7 @@ export const defaultPageConfig: PageConfig = {
       kind: "masonry-gallery",
       title: "05 渲染墙",
       subtitle: "瀑布流收尾展示",
+      includeInNav: true,
       content: {
         items: [
           { image: { src: "https://picsum.photos/seed/ms1/800/1200", title: "透视一" }, tags: ["入口"] },
@@ -314,6 +324,7 @@ const PATH_LABELS: Record<string, string> = {
   sections: "内容区块",
   kind: "区块类型",
   subtitle: "副标题",
+  includeInNav: "加入导航栏",
   content: "内容",
   cards: "叙述卡片",
   text: "正文",
@@ -392,6 +403,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         kind,
         title: `叙述区块 ${index + 1}`,
         subtitle: "",
+        includeInNav: true,
         content: {
           cards: [{ title: "小标题", text: "请编辑文本内容" }]
         }
@@ -402,6 +414,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         kind,
         title: `条带画廊 ${index + 1}`,
         subtitle: "",
+        includeInNav: true,
         content: {
           items: [{ image: { src: "", title: "图片" }, tags: ["标签"] }]
         }
@@ -412,6 +425,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         kind,
         title: `模型阶段 ${index + 1}`,
         subtitle: "",
+        includeInNav: true,
         content: {
           main: { image: { src: "", title: "主模型" }, tags: ["主视角"] },
           secondary: []
@@ -423,6 +437,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         kind,
         title: `场地网格 ${index + 1}`,
         subtitle: "",
+        includeInNav: true,
         content: {
           items: [{ placeholder: true, tags: ["占位"] }]
         }
@@ -433,6 +448,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         kind,
         title: `瀑布画廊 ${index + 1}`,
         subtitle: "",
+        includeInNav: true,
         content: {
           items: [{ image: { src: "", title: "图片" }, tags: ["标签"] }]
         }

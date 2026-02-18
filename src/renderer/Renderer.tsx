@@ -10,6 +10,11 @@ type ViewerImage = {
   title: string;
 };
 
+type NavItem = {
+  id: string;
+  label: string;
+};
+
 function collectViewerImages(config: PageConfig): ViewerImage[] {
   const list: ViewerImage[] = [];
   const push = (src?: string, title?: string) => {
@@ -52,6 +57,21 @@ function joinTags(tags?: string[]) {
 
 function getCurrentYear() {
   return new Date().getFullYear();
+}
+
+function deriveNavItems(config: PageConfig): NavItem[] {
+  const normalizeSectionTitle = (title: string, index: number) => {
+    const clean = title.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
+    const base = clean || `区块 ${index + 1}`;
+    return `${String(index + 1).padStart(2, "0")} ${base}`;
+  };
+
+  return config.sections
+    .filter((section) => section.includeInNav !== false)
+    .map((section, index) => ({
+      id: section.id,
+      label: normalizeSectionTitle(section.title ?? "", index)
+    }));
 }
 
 function MediaCard({
@@ -186,7 +206,11 @@ function sectionVisibleClass(isClient: boolean, visibleMap: Record<string, boole
 
 export function Renderer({ config }: RendererProps) {
   const isClient = typeof window !== "undefined";
-  const firstSectionId = useMemo(() => config.sections[0]?.id ?? "", [config.sections]);
+  const navItems = useMemo(() => deriveNavItems(config), [config]);
+  const firstSectionId = useMemo(
+    () => navItems[0]?.id ?? config.sections[0]?.id ?? "",
+    [config.sections, navItems]
+  );
   const viewerImages = useMemo(() => collectViewerImages(config), [config]);
   const [activeSectionId, setActiveSectionId] = useState(firstSectionId);
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
@@ -196,10 +220,10 @@ export function Renderer({ config }: RendererProps) {
   const activeImage = activeImageIndex === null ? null : viewerImages[activeImageIndex] ?? null;
 
   useEffect(() => {
-    setActiveSectionId(config.sections[0]?.id ?? "");
+    setActiveSectionId(navItems[0]?.id ?? config.sections[0]?.id ?? "");
     setVisibleSections({});
     setActiveImageIndex(null);
-  }, [config.sections]);
+  }, [config.sections, navItems]);
 
   useEffect(() => {
     if (!rootRef.current || !isClient) return;
@@ -338,9 +362,9 @@ export function Renderer({ config }: RendererProps) {
     <div ref={rootRef} className="render-root" data-theme={config.theme.background}>
       <div className="render-noise" aria-hidden="true" />
       <header className="render-topbar">
-        <strong>{config.nav.brand}</strong>
+        <strong>{config.meta.title}</strong>
         <nav>
-          {config.nav.items.map((item) => (
+          {navItems.map((item) => (
             <a
               key={item.id}
               href={`#${item.id}`}

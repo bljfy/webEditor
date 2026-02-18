@@ -46,6 +46,23 @@ function moveArrayItem<T>(list: T[], fromIndex: number, toIndex: number) {
   return next;
 }
 
+function syncNavFromSections(config: PageConfig): PageConfig {
+  const normalizeSectionTitle = (title: string, index: number) => {
+    const clean = title.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
+    const base = clean || `区块 ${index + 1}`;
+    return `${String(index + 1).padStart(2, "0")} ${base}`;
+  };
+
+  const next = structuredClone(config);
+  next.nav.items = next.sections
+    .filter((section) => section.includeInNav !== false)
+    .map((section, index) => ({
+      id: section.id || `section-${index + 1}`,
+      label: normalizeSectionTitle(section.title ?? "", index)
+    }));
+  return next;
+}
+
 export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml }: PanelProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
@@ -64,7 +81,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
   const hasUnsavedChanges = useMemo(() => !isSameConfig(draftConfig, pageConfig), [draftConfig, pageConfig]);
 
   useEffect(() => {
-    setDraftConfig(structuredClone(pageConfig));
+    setDraftConfig(syncNavFromSections(pageConfig));
     setHistoryPast([]);
     setHistoryFuture([]);
   }, [pageConfig]);
@@ -75,7 +92,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
 
   function saveDraft() {
     try {
-      const parsed = parsePageConfig(draftConfig);
+      const parsed = parsePageConfig(syncNavFromSections(draftConfig));
       setPageConfig(parsed);
       setDraftConfig(structuredClone(parsed));
       setHistoryPast([]);
@@ -92,9 +109,10 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
     setDraftConfig((prev) => {
       const next = structuredClone(prev);
       mutator(next);
+      const synced = syncNavFromSections(next);
       setHistoryPast((past) => [...past.slice(-49), prev]);
       setHistoryFuture([]);
-      return next;
+      return synced;
     });
     setSaveMessage("");
     if (errorMessage) {
@@ -175,6 +193,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
       <p className="panel-hint">
         面向零代码用户：可先自由编辑，再点击“保存更改”统一校验并更新预览。
       </p>
+      <p className="panel-hint">导航栏由内容区块自动生成，无需手动维护。</p>
       <p className="panel-hint">支持撤销/重做（Ctrl/Cmd + Z、Ctrl/Cmd + Y），区块支持拖拽排序。</p>
       {errorMessage ? <p className="panel-error">{errorMessage}</p> : null}
       {saveMessage ? <p className="panel-success">{saveMessage}</p> : null}
@@ -264,70 +283,6 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
             <option value="lg">大</option>
           </select>
         </label>
-        </div>
-      </details>
-
-      <details className="panel-group">
-        <summary>顶部导航</summary>
-        <div className="panel-group-body">
-        <label>
-          品牌名
-          <input
-            value={draftConfig.nav.brand}
-            onChange={(event) =>
-              update((draft) => {
-                draft.nav.brand = event.target.value;
-              })
-            }
-          />
-        </label>
-        {draftConfig.nav.items.map((item, index) => (
-          <div key={`nav-${index}`} className="array-row">
-            <input
-              value={item.id}
-              aria-label={`nav-id-${index}`}
-              placeholder="锚点 ID"
-              onChange={(event) =>
-                update((draft) => {
-                  draft.nav.items[index].id = event.target.value;
-                })
-              }
-            />
-            <input
-              value={item.label}
-              aria-label={`nav-label-${index}`}
-              placeholder="显示名称"
-              onChange={(event) =>
-                update((draft) => {
-                  draft.nav.items[index].label = event.target.value;
-                })
-              }
-            />
-            <button
-              type="button"
-              onClick={() =>
-                update((draft) => {
-                  draft.nav.items.splice(index, 1);
-                })
-              }
-            >
-              删除
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() =>
-            update((draft) => {
-              draft.nav.items.push({
-                id: `section-${draft.nav.items.length + 1}`,
-                label: `导航 ${draft.nav.items.length + 1}`
-              });
-            })
-          }
-        >
-          新增导航项
-        </button>
         </div>
       </details>
 
@@ -655,6 +610,19 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
                   })
                 }
               />
+            </label>
+
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={section.includeInNav !== false}
+                onChange={(event) =>
+                  update((draft) => {
+                    draft.sections[index].includeInNav = event.target.checked;
+                  })
+                }
+              />
+              加入导航栏
             </label>
 
             {section.kind === "narrative" ? (
