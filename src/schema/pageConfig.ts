@@ -263,14 +263,96 @@ export function createDefaultPageConfig(): PageConfig {
   return structuredClone(defaultPageConfig);
 }
 
+const PATH_LABELS: Record<string, string> = {
+  meta: "站点信息",
+  title: "标题",
+  description: "描述",
+  language: "语言",
+  theme: "外观样式",
+  background: "背景风格",
+  accentColor: "主题色",
+  radius: "圆角大小",
+  nav: "顶部导航",
+  brand: "品牌名",
+  items: "条目",
+  id: "ID",
+  label: "标签",
+  hero: "首屏",
+  eyebrow: "小标题",
+  lead: "导语",
+  stats: "数据卡片",
+  value: "数值",
+  gallery: "图片区",
+  role: "图片角色",
+  image: "图片",
+  src: "图片地址",
+  note: "备注",
+  sections: "内容区块",
+  kind: "区块类型",
+  subtitle: "副标题",
+  content: "内容",
+  cards: "叙述卡片",
+  text: "正文",
+  main: "主模型",
+  secondary: "次级模型",
+  placeholder: "占位开关",
+  tags: "标签组"
+};
+
+function formatIssuePath(path: (string | number)[]): string {
+  if (!path.length) return "配置根节点";
+
+  return path
+    .map((part) => {
+      if (typeof part === "number") {
+        return `第 ${part + 1} 项`;
+      }
+      return PATH_LABELS[part] ?? part;
+    })
+    .join(" > ");
+}
+
+function formatIssueMessage(issue: z.ZodIssue): string {
+  if (issue.code === z.ZodIssueCode.invalid_type) {
+    if (issue.received === "undefined") {
+      return "该项为必填，请填写后再保存。";
+    }
+    return "输入类型不正确，请检查填写格式。";
+  }
+
+  if (issue.code === z.ZodIssueCode.too_small) {
+    if (issue.type === "string") {
+      return "该项不能为空，请填写内容。";
+    }
+    if (issue.type === "array") {
+      return "至少需要填写一项。";
+    }
+  }
+
+  if (issue.code === z.ZodIssueCode.invalid_enum_value) {
+    const options = issue.options.map((item) => String(item)).join(" / ");
+    return `选项无效，请从以下值选择：${options}。`;
+  }
+
+  if (issue.code === z.ZodIssueCode.invalid_literal) {
+    return `固定值错误，应为：${String(issue.expected)}。`;
+  }
+
+  if (issue.code === z.ZodIssueCode.unrecognized_keys) {
+    return `存在未识别字段：${issue.keys.join("、")}。`;
+  }
+
+  return "输入不符合规则，请检查后重试。";
+}
+
 export function parsePageConfig(input: unknown): PageConfig {
   const result = pageConfigSchema.safeParse(input);
 
   if (!result.success) {
     const message = result.error.issues
-      .map((issue) => `${issue.path.join(".") || "root"}: ${issue.message}`)
+      .map((issue) => `${formatIssuePath(issue.path)}：${formatIssueMessage(issue)}`)
       .join("; ");
-    throw new Error(`PageConfig 校验失败: ${message}`);
+    throw new Error(`配置校验失败：${message}`);
   }
 
   return result.data;

@@ -22,6 +22,7 @@ describe("pageConfig schema", () => {
       }
     };
 
-    expect(() => parsePageConfig(input)).toThrow(/校验失败/);
+    expect(() => parsePageConfig(input)).toThrow(/配置校验失败/);
+    expect(() => parsePageConfig(input)).toThrow(/站点信息 > 语言/);
   });
 });
