@@ -49,6 +49,9 @@
 - `docx/09-tech-stack-and-goals.md`
   - 概述：技术栈方案与分阶段实现目标。
   - 功能：将架构约束转化为可执行落地计划。
+- `docx/10-change-log.md`
+  - 概述：项目改动历史、影响范围与技术负债记录。
+  - 功能：帮助后续维护者快速理解“做了什么、为什么做、还欠什么”。
 
 ## 语言与内容规范
 - 网站默认语言必须为中文（简体），配置中默认 `meta.language = zh-CN`。
@@ -65,10 +68,12 @@
 7. `docx/07-evolution-strategy.md`
 8. `docx/08-coding-standards.md`
 9. `docx/09-tech-stack-and-goals.md`
+10. `docx/10-change-log.md`
 
 ## 维护规则
 - 任何实现与 `docx/` 子文档冲突时，必须以子文档规范为准并修改实现。
 - 新增 SectionKind 时，必须同步更新 Schema 文档和对应 Renderer 说明。
 - 禁止在 Renderer 中引入编辑态分支（如 `isEditing`）。
 - 每次代码改动后必须执行对应测试（至少 `npm run lint` 与 `npm run test`，必要时执行 `npm run build`）并修复失败项。
+- 每次功能改动（行为或交互变化）必须更新 `docx/10-change-log.md`，说明改动内容、影响范围与技术负债。
 - 每次修改必须提交 commit，禁止长期保留未提交变更。
