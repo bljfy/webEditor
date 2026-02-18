@@ -41,6 +41,9 @@
 - `docx/08-coding-standards.md`
   - 概述：编码规范与提交流程。
   - 功能：统一风格与质量门槛，并强制每次修改提交 commit。
+- `docx/09-tech-stack-and-goals.md`
+  - 概述：技术栈方案与分阶段实现目标。
+  - 功能：将架构约束转化为可执行落地计划。
 
 ## 语言与内容规范
 - 网站默认语言必须为中文（简体），配置中默认 `meta.language = zh-CN`。
@@ -55,6 +58,7 @@
 6. `docx/06-export-spec.md`
 7. `docx/07-evolution-strategy.md`
 8. `docx/08-coding-standards.md`
+9. `docx/09-tech-stack-and-goals.md`
 
 ## 维护规则
 - 任何实现与 `docx/` 子文档冲突时，必须以子文档规范为准并修改实现。
