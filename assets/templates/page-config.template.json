@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "模板页面标题",
+    "description": "模板页面描述",
+    "language": "zh-CN"
+  },
+  "theme": {
+    "background": "light",
+    "accentColor": "#1f6feb",
+    "radius": "md"
+  },
+  "nav": {
+    "brand": "YOUR BRAND",
+    "items": [
+      { "id": "narrative", "label": "叙述" },
+      { "id": "gallery", "label": "画廊" }
+    ]
+  },
+  "hero": {
+    "eyebrow": "TEMPLATE",
+    "title": "这里是主标题",
+    "lead": "这里是导语说明",
+    "stats": [{ "value": "1", "label": "模板" }],
+    "gallery": [
+      { "role": "main", "image": { "src": "https://picsum.photos/seed/main/1280/860", "title": "主图" } },
+      { "role": "secondary", "image": { "src": "https://picsum.photos/seed/sub1/960/640", "title": "副图一" } }
+    ]
+  },
+  "sections": []
+}

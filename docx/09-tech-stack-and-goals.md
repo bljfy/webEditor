@@ -48,3 +48,5 @@
 - `src/export/`：导出链路
 - `src/theme/`：主题 token 映射
 - `test/unit/`、`test/integration/`、`test/e2e/`
+- `assets/static/`：静态资源（样式、脚本）
+- `assets/templates/`：模板入口与配置模板（供静态复用与二次生成）

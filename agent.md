@@ -11,6 +11,10 @@
 - `assets/`：静态资源（图片、样例数据）。
 - `scripts/`：开发与构建脚本。
 
+当前模板资源约定：
+- `assets/static/`：站点静态资源（`css/`、`js/`）。
+- `assets/templates/`：模板文件与模板配置（如 `index.template.html`、`page-config.template.json`）。
+
 ## 文档目标
 - 统一系统边界：Schema 驱动、配置中心化、纯函数渲染。
 - 用模块化文档管理规则，降低实现偏差。
