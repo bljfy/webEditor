@@ -12,11 +12,11 @@ html,
 body,
 #root {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
 }
 
 body {
-  min-height: 100vh;
+  overflow: hidden;
 }
 
 .workspace {
@@ -24,6 +24,8 @@ body {
   grid-template-columns: 380px 1fr;
   gap: 12px;
   padding: 12px;
+  height: 100%;
+  overflow: hidden;
 }
 
 .editor-shell,
@@ -35,11 +37,21 @@ body {
 }
 
 .editor-shell {
-  align-self: start;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+}
+
+.preview-shell {
+  max-height: calc(100vh - 24px);
+  overflow: auto;
 }
 
 .panel-title-row {
-  padding: 4px 0 10px;
+  position: sticky;
+  top: -12px;
+  z-index: 3;
+  padding: 8px 0 10px;
+  background: #fff;
 }
 
 .panel-title-row h2 {
@@ -423,12 +435,24 @@ button {
 }
 
 @media (max-width: 1080px) {
+  body {
+    overflow: auto;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
   }
 
   .editor-shell {
-    align-self: stretch;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .preview-shell {
+    max-height: none;
+    overflow: visible;
   }
 
   .render-hero,
