@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type PageConfig,
   type SectionKind,
@@ -34,37 +34,64 @@ function joinTags(tags?: string[]) {
 
 export function Panel({ pageConfig, setPageConfig }: PanelProps) {
   const [errorMessage, setErrorMessage] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
   const [newSectionKind, setNewSectionKind] = useState<SectionKind>("narrative");
+  const [draftConfig, setDraftConfig] = useState<PageConfig>(() => structuredClone(pageConfig));
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const sectionKinds = useMemo<SectionKind[]>(
     () => ["narrative", "strip-gallery", "model-stage", "atlas-grid", "masonry-gallery"],
     []
   );
 
-  function apply(nextConfig: unknown) {
+  useEffect(() => {
+    setDraftConfig(structuredClone(pageConfig));
+    setHasUnsavedChanges(false);
+  }, [pageConfig]);
+
+  function saveDraft() {
     try {
-      const parsed = parsePageConfig(nextConfig);
+      const parsed = parsePageConfig(draftConfig);
       setPageConfig(parsed);
+      setDraftConfig(structuredClone(parsed));
+      setHasUnsavedChanges(false);
       setErrorMessage("");
+      setSaveMessage("已保存，预览已更新。");
     } catch (error) {
+      setSaveMessage("");
       setErrorMessage(error instanceof Error ? error.message : "配置校验失败");
     }
   }
 
   function update(mutator: (draft: PageConfig) => void) {
-    const nextConfig = structuredClone(pageConfig);
-    mutator(nextConfig);
-    apply(nextConfig);
+    setDraftConfig((prev) => {
+      const next = structuredClone(prev);
+      mutator(next);
+      return next;
+    });
+    setHasUnsavedChanges(true);
+    setSaveMessage("");
+    if (errorMessage) {
+      setErrorMessage("");
+    }
   }
 
   return (
     <section className="editor-shell">
       <div className="panel-title-row">
         <h2>编辑面板</h2>
+        <div className="save-actions">
+          <button type="button" onClick={saveDraft} disabled={!hasUnsavedChanges}>
+            保存更改
+          </button>
+        </div>
       </div>
 
-      <p className="panel-hint">面向零代码用户：以下设置都可直接点选或输入，无需写任何 JSON。</p>
+      <p className="panel-hint">
+        面向零代码用户：可先自由编辑，再点击“保存更改”统一校验并更新预览。
+      </p>
       {errorMessage ? <p className="panel-error">{errorMessage}</p> : null}
+      {saveMessage ? <p className="panel-success">{saveMessage}</p> : null}
 
       <details className="panel-group" open>
         <summary>站点信息</summary>
@@ -72,7 +99,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           页面标题
           <input
-            value={pageConfig.meta.title}
+            value={draftConfig.meta.title}
             onChange={(event) =>
               update((draft) => {
                 draft.meta.title = event.target.value;
@@ -83,7 +110,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           页面描述
           <textarea
-            value={pageConfig.meta.description ?? ""}
+            value={draftConfig.meta.description ?? ""}
             onChange={(event) =>
               update((draft) => {
                 draft.meta.description = event.target.value;
@@ -94,7 +121,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           页面语言
           <select
-            value={pageConfig.meta.language}
+            value={draftConfig.meta.language}
             onChange={(event) =>
               update((draft) => {
                 draft.meta.language = event.target.value as "zh-CN" | "en";
@@ -114,7 +141,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           背景风格
           <select
-            value={pageConfig.theme.background}
+            value={draftConfig.theme.background}
             onChange={(event) =>
               update((draft) => {
                 draft.theme.background = event.target.value as "light" | "dark";
@@ -128,7 +155,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           主题色（可填 #1f6feb）
           <input
-            value={pageConfig.theme.accentColor ?? ""}
+            value={draftConfig.theme.accentColor ?? ""}
             onChange={(event) =>
               update((draft) => {
                 draft.theme.accentColor = event.target.value;
@@ -139,7 +166,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           圆角大小
           <select
-            value={pageConfig.theme.radius ?? "md"}
+            value={draftConfig.theme.radius ?? "md"}
             onChange={(event) =>
               update((draft) => {
                 draft.theme.radius = event.target.value as "sm" | "md" | "lg";
@@ -160,7 +187,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           品牌名
           <input
-            value={pageConfig.nav.brand}
+            value={draftConfig.nav.brand}
             onChange={(event) =>
               update((draft) => {
                 draft.nav.brand = event.target.value;
@@ -168,7 +195,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
             }
           />
         </label>
-        {pageConfig.nav.items.map((item, index) => (
+        {draftConfig.nav.items.map((item, index) => (
           <div key={`nav-${index}`} className="array-row">
             <input
               value={item.id}
@@ -224,7 +251,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           小标题（可选）
           <input
-            value={pageConfig.hero.eyebrow ?? ""}
+            value={draftConfig.hero.eyebrow ?? ""}
             onChange={(event) =>
               update((draft) => {
                 draft.hero.eyebrow = event.target.value;
@@ -235,7 +262,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           主标题
           <input
-            value={pageConfig.hero.title}
+            value={draftConfig.hero.title}
             onChange={(event) =>
               update((draft) => {
                 draft.hero.title = event.target.value;
@@ -246,7 +273,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <label>
           导语
           <textarea
-            value={pageConfig.hero.lead}
+            value={draftConfig.hero.lead}
             onChange={(event) =>
               update((draft) => {
                 draft.hero.lead = event.target.value;
@@ -256,7 +283,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         </label>
 
         <p className="block-label">数据卡片</p>
-        {(pageConfig.hero.stats ?? []).map((stat, index) => (
+        {(draftConfig.hero.stats ?? []).map((stat, index) => (
           <div key={`stat-${index}`} className="array-row">
             <input
               value={stat.value}
@@ -304,7 +331,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         </button>
 
         <p className="block-label">首屏图片</p>
-        {pageConfig.hero.gallery.map((item, index) => (
+        {draftConfig.hero.gallery.map((item, index) => (
           <div key={`gallery-${index}`} className="gallery-row">
             <select
               value={item.role}
@@ -363,7 +390,7 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
       <details className="panel-group" open>
         <summary>内容区块</summary>
         <div className="panel-group-body">
-        {pageConfig.sections.map((section, index) => (
+        {draftConfig.sections.map((section, index) => (
           <details key={section.id} className="section-editor">
             <summary>{`${section.title || "未命名区块"} · ${SECTION_KIND_LABELS[section.kind]}`}</summary>
             <div className="section-editor-body">

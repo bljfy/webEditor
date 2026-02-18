@@ -52,11 +52,25 @@ body {
   z-index: 3;
   padding: 8px 0 10px;
   background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .panel-title-row h2 {
   margin: 0;
   font-size: 1rem;
+}
+
+.save-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.save-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 fieldset {
@@ -222,6 +236,12 @@ button {
 .panel-error {
   margin: 0 0 10px;
   color: #c2172b;
+  font-size: 12px;
+}
+
+.panel-success {
+  margin: 0 0 10px;
+  color: #12703f;
   font-size: 12px;
 }
 
