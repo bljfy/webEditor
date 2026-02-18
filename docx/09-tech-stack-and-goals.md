@@ -18,6 +18,8 @@
   - 覆盖 Schema、Renderer、预览导出一致性。
 - 工程质量：`ESLint + Prettier + Husky + lint-staged + Commitlint`
   - 统一代码风格，强制提交前检查与规范化 commit。
+- 部署平台：`GitHub Pages`
+  - 静态站点统一部署到 GitHub Pages，产物来自构建后的前端静态文件。
 
 ## 分阶段实现目标
 1. Phase 1（核心骨架）
@@ -36,6 +38,7 @@
 4. Phase 4（质量与协作）
 - 接入 lint/test/commit hooks。
 - 落实“每次修改必须提交 commit”的流程。
+- 接入 GitHub Actions 自动构建并发布到 GitHub Pages。
 
 ## 建议目录映射
 - `src/schema/`：Schema 与默认值逻辑
