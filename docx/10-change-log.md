@@ -172,7 +172,7 @@
   - 目前仅在预览容器内做滚动监听，后续可增加独立 e2e 用例验证多容器场景。
 
 ### 17) 修复导出与预览样式不一致（共享样式源）
-- 提交：`待本次提交`
+- 提交：`44fdce1`
 - 改动内容：
   - 新增 `src/renderer/rendererSharedStyles.ts` 作为 Renderer 唯一样式源。
   - `Preview` 与 `Export` 同时引用共享样式，移除页面样式文件中重复的 Renderer 样式块。
