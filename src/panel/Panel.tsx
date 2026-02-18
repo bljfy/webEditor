@@ -47,18 +47,24 @@ function moveArrayItem<T>(list: T[], fromIndex: number, toIndex: number) {
 }
 
 function syncNavFromSections(config: PageConfig): PageConfig {
-  const normalizeSectionTitle = (title: string, index: number) => {
-    const clean = title.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
+  const normalizeSectionTitle = (title: string, navLabel: string | undefined, index: number) => {
+    const source = navLabel?.trim() ? navLabel : title;
+    const clean = source.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
     const base = clean || `区块 ${index + 1}`;
     return `${String(index + 1).padStart(2, "0")} ${base}`;
   };
 
   const next = structuredClone(config);
+  next.sections = next.sections.map((section, index) => ({
+    ...section,
+    id: section.id?.trim() || `section-${index + 1}`
+  }));
+
   next.nav.items = next.sections
     .filter((section) => section.includeInNav !== false)
     .map((section, index) => ({
       id: section.id || `section-${index + 1}`,
-      label: normalizeSectionTitle(section.title ?? "", index)
+      label: normalizeSectionTitle(section.title ?? "", section.navLabel, index)
     }));
   return next;
 }
@@ -193,7 +199,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
       <p className="panel-hint">
         面向零代码用户：可先自由编辑，再点击“保存更改”统一校验并更新预览。
       </p>
-      <p className="panel-hint">导航栏由内容区块自动生成，无需手动维护。</p>
+      <p className="panel-hint">导航栏由内容区块自动生成，可按区块勾选是否加入，并可单独设置导航显示文字。</p>
       <p className="panel-hint">支持撤销/重做（Ctrl/Cmd + Z、Ctrl/Cmd + Y），区块支持拖拽排序。</p>
       {errorMessage ? <p className="panel-error">{errorMessage}</p> : null}
       {saveMessage ? <p className="panel-success">{saveMessage}</p> : null}
@@ -552,15 +558,6 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
             </summary>
             <div className="section-editor-body">
             <div className="array-row">
-              <input
-                value={section.id}
-                placeholder="区块 ID"
-                onChange={(event) =>
-                  update((draft) => {
-                    draft.sections[index].id = event.target.value;
-                  })
-                }
-              />
               <select
                 value={section.kind}
                 onChange={(event) =>
@@ -576,6 +573,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
                   </option>
                 ))}
               </select>
+              <div className="inline-hint">区块锚点 ID 由系统自动维护，普通模式无需设置。</div>
               <button
                 type="button"
                 onClick={() =>
@@ -595,6 +593,19 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
                 onChange={(event) =>
                   update((draft) => {
                     draft.sections[index].title = event.target.value;
+                  })
+                }
+              />
+            </label>
+
+            <label>
+              导航显示文字（可选）
+              <input
+                value={section.navLabel ?? ""}
+                placeholder="不填则使用区块标题"
+                onChange={(event) =>
+                  update((draft) => {
+                    draft.sections[index].navLabel = event.target.value;
                   })
                 }
               />

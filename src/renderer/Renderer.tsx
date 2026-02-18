@@ -60,8 +60,9 @@ function getCurrentYear() {
 }
 
 function deriveNavItems(config: PageConfig): NavItem[] {
-  const normalizeSectionTitle = (title: string, index: number) => {
-    const clean = title.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
+  const normalizeSectionTitle = (title: string, navLabel: string | undefined, index: number) => {
+    const source = navLabel?.trim() ? navLabel : title;
+    const clean = source.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
     const base = clean || `区块 ${index + 1}`;
     return `${String(index + 1).padStart(2, "0")} ${base}`;
   };
@@ -70,7 +71,7 @@ function deriveNavItems(config: PageConfig): NavItem[] {
     .filter((section) => section.includeInNav !== false)
     .map((section, index) => ({
       id: section.id,
-      label: normalizeSectionTitle(section.title ?? "", index)
+      label: normalizeSectionTitle(section.title ?? "", section.navLabel, index)
     }));
 }
 

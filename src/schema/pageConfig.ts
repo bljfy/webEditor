@@ -40,6 +40,7 @@ const narrativeSectionSchema = z.object({
   id: z.string().min(1),
   kind: z.literal("narrative"),
   title: z.string().min(1),
+  navLabel: z.string().optional(),
   subtitle: z.string().optional(),
   includeInNav: z.boolean().optional(),
   content: z.object({
@@ -56,6 +57,7 @@ const stripGallerySectionSchema = z.object({
   id: z.string().min(1),
   kind: z.literal("strip-gallery"),
   title: z.string().min(1),
+  navLabel: z.string().optional(),
   subtitle: z.string().optional(),
   includeInNav: z.boolean().optional(),
   content: z.object({
@@ -72,6 +74,7 @@ const modelStageSectionSchema = z.object({
   id: z.string().min(1),
   kind: z.literal("model-stage"),
   title: z.string().min(1),
+  navLabel: z.string().optional(),
   subtitle: z.string().optional(),
   includeInNav: z.boolean().optional(),
   content: z.object({
@@ -94,6 +97,7 @@ const atlasGridSectionSchema = z.object({
   id: z.string().min(1),
   kind: z.literal("atlas-grid"),
   title: z.string().min(1),
+  navLabel: z.string().optional(),
   subtitle: z.string().optional(),
   includeInNav: z.boolean().optional(),
   content: z.object({
@@ -111,6 +115,7 @@ const masonryGallerySectionSchema = z.object({
   id: z.string().min(1),
   kind: z.literal("masonry-gallery"),
   title: z.string().min(1),
+  navLabel: z.string().optional(),
   subtitle: z.string().optional(),
   includeInNav: z.boolean().optional(),
   content: z.object({
@@ -222,6 +227,7 @@ export const defaultPageConfig: PageConfig = {
       id: "narrative",
       kind: "narrative",
       title: "01 项目叙述",
+      navLabel: "项目叙述",
       subtitle: "模板目标和阅读路径",
       includeInNav: true,
       content: {
@@ -236,6 +242,7 @@ export const defaultPageConfig: PageConfig = {
       id: "strip",
       kind: "strip-gallery",
       title: "02 图纸条带",
+      navLabel: "图纸条带",
       subtitle: "横向滚动展示图纸/素材",
       includeInNav: true,
       content: {
@@ -249,6 +256,7 @@ export const defaultPageConfig: PageConfig = {
       id: "models",
       kind: "model-stage",
       title: "03 模型阶段",
+      navLabel: "模型阶段",
       subtitle: "主模型 + 次模型",
       includeInNav: true,
       content: {
@@ -262,6 +270,7 @@ export const defaultPageConfig: PageConfig = {
       id: "atlas",
       kind: "atlas-grid",
       title: "04 场地网格",
+      navLabel: "场地网格",
       subtitle: "图像与占位混排",
       includeInNav: true,
       content: {
@@ -276,6 +285,7 @@ export const defaultPageConfig: PageConfig = {
       id: "masonry",
       kind: "masonry-gallery",
       title: "05 渲染墙",
+      navLabel: "渲染墙",
       subtitle: "瀑布流收尾展示",
       includeInNav: true,
       content: {
@@ -323,6 +333,7 @@ const PATH_LABELS: Record<string, string> = {
   note: "备注",
   sections: "内容区块",
   kind: "区块类型",
+  navLabel: "导航显示名称",
   subtitle: "副标题",
   includeInNav: "加入导航栏",
   content: "内容",
@@ -402,6 +413,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         id,
         kind,
         title: `叙述区块 ${index + 1}`,
+        navLabel: "",
         subtitle: "",
         includeInNav: true,
         content: {
@@ -413,6 +425,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         id,
         kind,
         title: `条带画廊 ${index + 1}`,
+        navLabel: "",
         subtitle: "",
         includeInNav: true,
         content: {
@@ -424,6 +437,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         id,
         kind,
         title: `模型阶段 ${index + 1}`,
+        navLabel: "",
         subtitle: "",
         includeInNav: true,
         content: {
@@ -436,6 +450,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         id,
         kind,
         title: `场地网格 ${index + 1}`,
+        navLabel: "",
         subtitle: "",
         includeInNav: true,
         content: {
@@ -447,6 +462,7 @@ export function createDefaultSection(kind: SectionKind, index: number) {
         id,
         kind,
         title: `瀑布画廊 ${index + 1}`,
+        navLabel: "",
         subtitle: "",
         includeInNav: true,
         content: {

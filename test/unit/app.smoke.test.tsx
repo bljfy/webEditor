@@ -37,4 +37,19 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "重做" }));
     expect(heroTitleInput.value).toBe("第二次修改");
   });
+
+  it("builds nav automatically and respects include-in-nav + custom label", () => {
+    render(<App />);
+
+    const navLabelInputs = screen.getAllByLabelText("导航显示文字（可选）") as HTMLInputElement[];
+    fireEvent.change(navLabelInputs[1], { target: { value: "我的条带" } });
+
+    const includeNavChecks = screen.getAllByLabelText("加入导航栏") as HTMLInputElement[];
+    fireEvent.click(includeNavChecks[0]);
+
+    fireEvent.click(screen.getByRole("button", { name: "保存更改" }));
+
+    expect(screen.queryByRole("link", { name: "01 项目叙述" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "01 我的条带" })).toBeInTheDocument();
+  });
 });
