@@ -13,7 +13,7 @@ export function Preview({ config, hasUnsavedChanges, lastSavedAt }: PreviewProps
   return (
     <section className="preview-shell">
       <style>{RENDERER_SHARED_CSS}</style>
-      <div className="panel-title-row">
+      <div className="preview-title-row">
         <h2>Preview</h2>
         <div className="preview-status">
           <span>{savedText}</span>
