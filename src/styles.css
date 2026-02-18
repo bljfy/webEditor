@@ -19,14 +19,6 @@ body {
   overflow: hidden;
 }
 
-body[data-app-theme="light"] {
-  background: #eef3fb;
-}
-
-body[data-app-theme="dark"] {
-  background: #0f1726;
-}
-
 .workspace {
   --chrome-bg: #ffffff;
   --chrome-bg-soft: #f6f9ff;
@@ -44,17 +36,6 @@ body[data-app-theme="dark"] {
   height: 100%;
   overflow: hidden;
   min-height: 0;
-}
-
-.workspace-theme-dark {
-  --chrome-bg: #152134;
-  --chrome-bg-soft: #17263c;
-  --chrome-border: #2a3a52;
-  --chrome-text: #dce8fa;
-  --chrome-muted: #9bb0cb;
-  --control-bg: #1f2f46;
-  --control-border: #355070;
-  --control-text: #e8f2ff;
 }
 
 .workspace-header {
@@ -91,11 +72,6 @@ body[data-app-theme="dark"] {
   gap: 8px;
   font-size: 12px;
   color: var(--chrome-muted);
-}
-
-.workspace-header-actions button[aria-pressed="true"] {
-  border-color: #1f6feb;
-  box-shadow: 0 0 0 1px rgba(31, 111, 235, 0.2) inset;
 }
 
 .workspace-mobile-tabs {
