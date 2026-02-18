@@ -71,4 +71,19 @@ describe("App", () => {
     );
     expect(sectionTitlesAfter[0]).not.toBe(sectionTitlesBefore[0]);
   });
+
+  it("supports section reorder with move buttons", () => {
+    render(<App />);
+
+    const sectionTitlesBefore = Array.from(document.querySelectorAll(".section-editor .section-title")).map((node) =>
+      node.textContent?.trim()
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /下移区块：/ })[0]);
+
+    const sectionTitlesAfter = Array.from(document.querySelectorAll(".section-editor .section-title")).map((node) =>
+      node.textContent?.trim()
+    );
+    expect(sectionTitlesAfter[0]).not.toBe(sectionTitlesBefore[0]);
+  });
 });

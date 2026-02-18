@@ -492,7 +492,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
       <details className="panel-group" open>
         <summary>内容区块</summary>
         <div className="panel-group-body">
-        <p className="group-desc">按展示顺序管理内容。支持拖拽排序，并控制区块是否出现在导航栏。</p>
+        <p className="group-desc">按展示顺序管理内容。支持拖拽、键盘（Alt+↑/↓）和按钮排序，并控制区块是否出现在导航栏。</p>
         {draftConfig.sections.map((section, index) => (
           <details
             key={section.id}
@@ -532,24 +532,54 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           >
             <summary>
               <span className="section-title">{`${section.title || "未命名区块"} · ${SECTION_KIND_LABELS[section.kind]}`}</span>
-              <button
-                type="button"
-                className="drag-handle"
-                draggable
-                onClick={(event) => event.preventDefault()}
-                onDragStart={() => {
-                  setDraggingSectionIndex(index);
-                  setDragOverSectionIndex(index);
-                }}
-                onDragEnd={() => {
-                  setDraggingSectionIndex(null);
-                  setDragOverSectionIndex(null);
-                }}
-                aria-label={`拖拽排序区块：${section.title || `第 ${index + 1} 个区块`}`}
-                title="拖拽排序"
-              >
-                拖拽排序
-              </button>
+              <div className="section-summary-actions">
+                <button
+                  type="button"
+                  className="move-handle"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    reorderSection(index, Math.max(0, index - 1));
+                  }}
+                  disabled={index === 0}
+                  aria-label={`上移区块：${section.title || `第 ${index + 1} 个区块`}`}
+                  title="上移"
+                >
+                  上移
+                </button>
+                <button
+                  type="button"
+                  className="move-handle"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    reorderSection(index, Math.min(draftConfig.sections.length - 1, index + 1));
+                  }}
+                  disabled={index === draftConfig.sections.length - 1}
+                  aria-label={`下移区块：${section.title || `第 ${index + 1} 个区块`}`}
+                  title="下移"
+                >
+                  下移
+                </button>
+                <button
+                  type="button"
+                  className="drag-handle"
+                  draggable
+                  onClick={(event) => event.preventDefault()}
+                  onDragStart={() => {
+                    setDraggingSectionIndex(index);
+                    setDragOverSectionIndex(index);
+                  }}
+                  onDragEnd={() => {
+                    setDraggingSectionIndex(null);
+                    setDragOverSectionIndex(null);
+                  }}
+                  aria-label={`拖拽排序区块：${section.title || `第 ${index + 1} 个区块`}`}
+                  title="拖拽排序"
+                >
+                  拖拽排序
+                </button>
+              </div>
             </summary>
             <div className="section-editor-body">
             <div className="array-row">

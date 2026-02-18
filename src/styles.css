@@ -307,6 +307,21 @@ button {
   white-space: nowrap;
 }
 
+.section-summary-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.move-handle {
+  border: 1px solid #c9d7ec;
+  background: #f8fbff;
+  color: #35516f;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
 .drag-handle {
   border: 1px dashed #9ab3d3;
   background: #f5f9ff;
@@ -445,6 +460,12 @@ button {
   .atlas-row,
   .section-nav-row {
     grid-template-columns: 1fr;
+  }
+
+  .section-summary-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .mobile-fab-save {
