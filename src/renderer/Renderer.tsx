@@ -190,27 +190,15 @@ export function Renderer({ config }: RendererProps) {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        let nextActiveId: string | null = null;
-        let maxRatio = 0;
-
         setVisibleSections((prev) => {
           const next = { ...prev };
           for (const entry of entries) {
             if (entry.isIntersecting) {
               next[(entry.target as HTMLElement).id] = true;
             }
-
-            if (entry.isIntersecting && entry.intersectionRatio >= maxRatio) {
-              maxRatio = entry.intersectionRatio;
-              nextActiveId = (entry.target as HTMLElement).id;
-            }
           }
           return next;
         });
-
-        if (nextActiveId) {
-          setActiveSectionId(nextActiveId);
-        }
       },
       {
         root: scrollContainer,
@@ -221,6 +209,52 @@ export function Renderer({ config }: RendererProps) {
 
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
+  }, [config.sections, isClient]);
+
+  useEffect(() => {
+    if (!rootRef.current || !isClient) return;
+
+    const rootElement = rootRef.current;
+    const sections = Array.from(rootElement.querySelectorAll<HTMLElement>(".render-section"));
+    if (!sections.length) return;
+
+    const scrollContainer = rootElement.closest(".preview-shell") as HTMLElement | null;
+    let rafId = 0;
+
+    const updateActiveByScroll = () => {
+      const topOffset = scrollContainer
+        ? scrollContainer.getBoundingClientRect().top + 96
+        : 96;
+
+      let candidateId = sections[0].id;
+
+      for (const section of sections) {
+        const top = section.getBoundingClientRect().top;
+        if (top - topOffset <= 0) {
+          candidateId = section.id;
+        } else {
+          break;
+        }
+      }
+
+      setActiveSectionId(candidateId);
+    };
+
+    const onScroll = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateActiveByScroll);
+    };
+
+    updateActiveByScroll();
+    const listenerTarget: HTMLElement | Window = scrollContainer ?? window;
+    listenerTarget.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      listenerTarget.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [config.sections, isClient]);
 
   return (
