@@ -9,6 +9,7 @@ import {
 type PanelProps = {
   pageConfig: PageConfig;
   setPageConfig: (nextConfig: PageConfig) => void;
+  onExportHtml: () => void;
 };
 
 const SECTION_KIND_LABELS: Record<SectionKind, string> = {
@@ -32,7 +33,7 @@ function joinTags(tags?: string[]) {
   return tags?.join(", ") ?? "";
 }
 
-export function Panel({ pageConfig, setPageConfig }: PanelProps) {
+export function Panel({ pageConfig, setPageConfig, onExportHtml }: PanelProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [newSectionKind, setNewSectionKind] = useState<SectionKind>("narrative");
@@ -83,6 +84,9 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         <div className="save-actions">
           <button type="button" onClick={saveDraft} disabled={!hasUnsavedChanges}>
             保存更改
+          </button>
+          <button type="button" onClick={onExportHtml}>
+            导出 HTML
           </button>
         </div>
       </div>
