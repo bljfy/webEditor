@@ -5,6 +5,11 @@ type RendererProps = {
   config: PageConfig;
 };
 
+type ViewerImage = {
+  src: string;
+  title: string;
+};
+
 function joinTags(tags?: string[]) {
   return tags?.length ? tags.join(" / ") : "";
 }
@@ -13,31 +18,42 @@ function MediaCard({
   src,
   title,
   tags,
-  placeholder
+  placeholder,
+  onOpen
 }: {
   src?: string;
   title?: string;
   tags?: string[];
   placeholder?: boolean;
+  onOpen: (image: ViewerImage) => void;
 }) {
   const hasImage = src && src.trim().length > 0;
+  const canOpen = hasImage && !placeholder;
 
   return (
     <article className="media-card">
       {placeholder || !hasImage ? (
         <div className="media-placeholder">PLACEHOLDER</div>
       ) : (
-        <img src={src} alt={title || "image"} loading="lazy" />
+        <button
+          type="button"
+          className="media-open-trigger"
+          onClick={() => onOpen({ src: src ?? "", title: title || "未命名图片" })}
+          aria-label={`查看图片：${title || "未命名图片"}`}
+        >
+          <img src={src} alt={title || "image"} loading="lazy" />
+        </button>
       )}
       <div className="media-body">
         <h4>{title || "未命名"}</h4>
         {tags?.length ? <p>{joinTags(tags)}</p> : null}
       </div>
+      {canOpen ? <span className="zoom-hint">点击放大</span> : null}
     </article>
   );
 }
 
-function renderSection(section: PageConfig["sections"][number]) {
+function renderSection(section: PageConfig["sections"][number], onOpenImage: (image: ViewerImage) => void) {
   if (section.kind === "narrative") {
     return (
       <div className="section-grid section-grid-narrative">
@@ -60,6 +76,7 @@ function renderSection(section: PageConfig["sections"][number]) {
             src={item.image.src}
             title={item.image.title}
             tags={item.tags}
+            onOpen={onOpenImage}
           />
         ))}
       </div>
@@ -73,6 +90,7 @@ function renderSection(section: PageConfig["sections"][number]) {
           src={section.content.main.image.src}
           title={section.content.main.image.title}
           tags={section.content.main.tags}
+          onOpen={onOpenImage}
         />
         <div className="model-secondary-grid">
           {section.content.secondary?.map((item, index) => (
@@ -81,6 +99,7 @@ function renderSection(section: PageConfig["sections"][number]) {
               src={item.image.src}
               title={item.image.title}
               tags={item.tags}
+              onOpen={onOpenImage}
             />
           ))}
         </div>
@@ -98,6 +117,7 @@ function renderSection(section: PageConfig["sections"][number]) {
             title={item.image?.title}
             tags={item.tags}
             placeholder={item.placeholder}
+            onOpen={onOpenImage}
           />
         ))}
       </div>
@@ -112,6 +132,7 @@ function renderSection(section: PageConfig["sections"][number]) {
           src={item.image.src}
           title={item.image.title}
           tags={item.tags}
+          onOpen={onOpenImage}
         />
       ))}
     </div>
@@ -128,6 +149,7 @@ export function Renderer({ config }: RendererProps) {
   const firstSectionId = useMemo(() => config.sections[0]?.id ?? "", [config.sections]);
   const [activeSectionId, setActiveSectionId] = useState(firstSectionId);
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
+  const [activeImage, setActiveImage] = useState<ViewerImage | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -192,7 +214,8 @@ export function Renderer({ config }: RendererProps) {
       },
       {
         root: scrollContainer,
-        threshold: [0.2, 0.35, 0.55, 0.75]
+        rootMargin: "0px 0px -6% 0px",
+        threshold: [0.05, 0.2, 0.35, 0.55, 0.75]
       }
     );
 
@@ -243,7 +266,19 @@ export function Renderer({ config }: RendererProps) {
         <div className="hero-gallery">
           {config.hero.gallery.map((item, index) => (
             <div key={`hero-gallery-${index}`} className={item.role === "main" ? "hero-main" : "hero-sub"}>
-              <img src={item.image.src} alt={item.image.title || "hero-image"} />
+              <button
+                type="button"
+                className="media-open-trigger"
+                onClick={() =>
+                  setActiveImage({
+                    src: item.image.src,
+                    title: item.image.title || "未命名图片"
+                  })
+                }
+                aria-label={`查看图片：${item.image.title || "未命名图片"}`}
+              >
+                <img src={item.image.src} alt={item.image.title || "hero-image"} />
+              </button>
             </div>
           ))}
         </div>
@@ -259,9 +294,23 @@ export function Renderer({ config }: RendererProps) {
             <h3>{section.title}</h3>
             {section.subtitle ? <p>{section.subtitle}</p> : null}
           </header>
-          {renderSection(section)}
+          {renderSection(section, setActiveImage)}
         </section>
       ))}
+
+      {activeImage ? (
+        <div className="image-modal" onClick={() => setActiveImage(null)}>
+          <div className="image-modal-content" onClick={(event) => event.stopPropagation()}>
+            <img src={activeImage.src} alt={activeImage.title} />
+            <div className="image-modal-bar">
+              <span>{activeImage.title}</span>
+              <button type="button" onClick={() => setActiveImage(null)}>
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
