@@ -170,7 +170,7 @@ button {
 
 .atlas-row {
   display: grid;
-  grid-template-columns: 150px 1fr 1fr 1fr auto;
+  grid-template-columns: 1fr;
   gap: 6px;
   margin-bottom: 6px;
 }
@@ -180,6 +180,7 @@ button {
   align-items: center;
   gap: 6px;
   margin: 0;
+  justify-self: start;
 }
 
 .checkbox-row input[type="checkbox"] {
