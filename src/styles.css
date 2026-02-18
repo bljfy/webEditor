@@ -107,6 +107,32 @@ button {
   grid-template-columns: 96px 1fr 1fr auto;
 }
 
+.atlas-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 1fr 1fr auto;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.inline-hint {
+  display: grid;
+  align-items: center;
+  font-size: 12px;
+  color: #5e708d;
+}
+
 .block-label {
   margin: 8px 0 6px;
   font-size: 12px;
@@ -349,7 +375,8 @@ button {
   .section-grid-model,
   .section-grid-atlas,
   .array-row,
-  .gallery-row {
+  .gallery-row,
+  .atlas-row {
     grid-template-columns: 1fr;
   }
 
