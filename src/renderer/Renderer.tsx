@@ -120,11 +120,12 @@ function renderSection(section: PageConfig["sections"][number]) {
 export function Renderer({ config }: RendererProps) {
   return (
     <div className="render-root" data-theme={config.theme.background}>
+      <div className="render-noise" aria-hidden="true" />
       <header className="render-topbar">
         <strong>{config.nav.brand}</strong>
         <nav>
           {config.nav.items.map((item) => (
-            <a key={item.id} href={`#${item.id}`}>
+            <a key={item.id} href={`#${item.id}`} className="render-nav-link">
               {item.label}
             </a>
           ))}
@@ -155,7 +156,7 @@ export function Renderer({ config }: RendererProps) {
       </section>
 
       {config.sections.map((section) => (
-        <section id={section.id} key={section.id} className="render-section">
+        <section id={section.id} key={section.id} className="render-section section-anim">
           <header>
             <h3>{section.title}</h3>
             {section.subtitle ? <p>{section.subtitle}</p> : null}

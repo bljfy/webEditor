@@ -260,11 +260,17 @@ button {
   --panel: #ffffff;
   --bg: #f3f6fb;
   --accent: #1f6feb;
-  --radius: 12px;
+  --accent-2: #ff9e57;
+  --radius: 14px;
   color: var(--ink);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 7% 10%, rgba(31, 111, 235, 0.12), transparent 26%),
+    radial-gradient(circle at 93% 0%, rgba(255, 158, 87, 0.12), transparent 24%),
+    var(--bg);
   padding: 8px;
   border-radius: 10px;
+  position: relative;
+  overflow: hidden;
 }
 
 .render-root[data-theme="dark"] {
@@ -273,6 +279,18 @@ button {
   --line: #1f3553;
   --panel: #0d1b2d;
   --bg: #06111e;
+  --accent: #72d9ff;
+}
+
+.render-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image: radial-gradient(currentcolor 0.45px, transparent 0.45px);
+  background-size: 3px 3px;
+  color: #9bb0c7;
+  z-index: 0;
 }
 
 .render-topbar,
@@ -281,13 +299,19 @@ button {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
+  position: relative;
+  z-index: 1;
 }
 
 .render-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   justify-content: space-between;
   gap: 10px;
   padding: 10px;
+  backdrop-filter: blur(8px);
 }
 
 .render-topbar nav {
@@ -296,26 +320,36 @@ button {
   flex-wrap: wrap;
 }
 
-.render-topbar a {
+.render-nav-link {
   color: var(--muted);
   text-decoration: none;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 4px 9px;
   font-size: 12px;
+  transition: all 0.28s ease;
+}
+
+.render-nav-link:hover {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent) inset;
 }
 
 .render-hero {
   margin-top: 10px;
-  padding: 10px;
+  padding: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  animation: heroFloatIn 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .hero-eyebrow {
   color: var(--accent);
-  font-size: 12px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .render-hero h2 {
@@ -338,10 +372,16 @@ button {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 6px;
+  background: color-mix(in srgb, var(--panel) 92%, var(--accent) 8%);
+  transition: transform 0.25s ease;
 }
 
 .hero-stats strong {
   display: block;
+}
+
+.hero-stats article:hover {
+  transform: translateY(-2px);
 }
 
 .hero-gallery {
@@ -359,6 +399,13 @@ button {
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.hero-main:hover,
+.hero-sub:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 24px color-mix(in srgb, #000 20%, transparent);
 }
 
 .hero-gallery img,
@@ -371,7 +418,8 @@ button {
 
 .render-section {
   margin-top: 10px;
-  padding: 10px;
+  padding: 11px;
+  overflow: hidden;
 }
 
 .render-section header h3 {
@@ -396,6 +444,16 @@ button {
   grid-auto-flow: column;
   grid-auto-columns: minmax(220px, 1fr);
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.section-grid-strip::-webkit-scrollbar {
+  height: 8px;
+}
+
+.section-grid-strip::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 42%, transparent);
+  border-radius: 999px;
 }
 
 .section-grid-model {
@@ -425,7 +483,22 @@ button {
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--panel);
+  background: color-mix(in srgb, var(--panel) 92%, var(--accent) 8%);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.1, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.media-card {
+  scroll-snap-align: start;
+}
+
+.narrative-card:hover,
+.media-card:hover {
+  transform: translateY(-6px);
+  border-color: color-mix(in srgb, var(--accent) 46%, var(--line));
+  box-shadow: 0 18px 28px color-mix(in srgb, #000 22%, transparent);
 }
 
 .narrative-card {
@@ -449,11 +522,77 @@ button {
   display: grid;
   place-items: center;
   color: var(--muted);
-  background: repeating-linear-gradient(-45deg, #eef3fb, #eef3fb 10px, #f7faff 10px, #f7faff 20px);
+  background:
+    linear-gradient(130deg, color-mix(in srgb, var(--accent) 16%, var(--bg)), color-mix(in srgb, var(--accent-2) 12%, var(--bg))),
+    repeating-linear-gradient(-45deg, #eef3fb, #eef3fb 10px, #f7faff 10px, #f7faff 20px);
+  position: relative;
+}
+
+.media-placeholder::before,
+.media-placeholder::after {
+  content: "";
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.media-placeholder::before {
+  inset: 22% 16%;
+}
+
+.media-placeholder::after {
+  inset: 38% 30%;
 }
 
 .media-body {
   padding: 8px;
+}
+
+.section-anim {
+  opacity: 0;
+  transform: translateY(22px);
+  animation: sectionFadeUp 0.75s cubic-bezier(0.2, 0.7, 0.1, 1) forwards;
+}
+
+.render-root > .section-anim:nth-of-type(1) {
+  animation-delay: 0.12s;
+}
+
+.render-root > .section-anim:nth-of-type(2) {
+  animation-delay: 0.2s;
+}
+
+.render-root > .section-anim:nth-of-type(3) {
+  animation-delay: 0.28s;
+}
+
+.render-root > .section-anim:nth-of-type(4) {
+  animation-delay: 0.36s;
+}
+
+.render-root > .section-anim:nth-of-type(5) {
+  animation-delay: 0.44s;
+}
+
+.render-root > .section-anim:nth-of-type(6) {
+  animation-delay: 0.52s;
+}
+
+@keyframes sectionFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroFloatIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 1080px) {
@@ -492,5 +631,14 @@ button {
 
   .hero-main {
     grid-row: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .render-root *,
+  .render-root *::before,
+  .render-root *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
