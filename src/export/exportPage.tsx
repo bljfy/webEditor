@@ -41,44 +41,69 @@ const EXPORT_INTERACTION_SCRIPT = `
     });
   });
 
+  const collectViewerImages = () => {
+    return Array.from(document.querySelectorAll(".media-open-trigger img"))
+      .map((img) => ({
+        src: img.getAttribute("src") || "",
+        title: img.getAttribute("alt") || "图片"
+      }))
+      .filter((item) => item.src);
+  };
+
+  const viewerImages = collectViewerImages();
+  let activeImageIndex = -1;
+
   const removeModal = () => {
     const modal = document.querySelector(".image-modal");
     if (modal) modal.remove();
+    activeImageIndex = -1;
   };
 
-  const openModal = (src, title) => {
-    if (!src) return;
+  const openModalByIndex = (index) => {
+    if (!viewerImages.length) return;
+    const safeIndex = (index + viewerImages.length) % viewerImages.length;
+    const current = viewerImages[safeIndex];
+    activeImageIndex = safeIndex;
+    if (!current.src) return;
     removeModal();
     const modal = document.createElement("div");
     modal.className = "image-modal";
     modal.innerHTML = \`
       <div class="image-modal-content">
-        <img src="\${src}" alt="\${title || "图片"}" />
+        <img src="\${current.src}" alt="\${current.title || "图片"}" />
         <div class="image-modal-bar">
-          <span>\${title || "图片"}</span>
-          <button type="button">关闭</button>
+          <div class="image-modal-nav">
+            <button type="button" data-modal-prev>上一张</button>
+            <button type="button" data-modal-next>下一张</button>
+          </div>
+          <span>\${current.title || "图片"}</span>
+          <button type="button" data-modal-close>关闭</button>
         </div>
       </div>
     \`;
     modal.addEventListener("click", () => removeModal());
     const content = modal.querySelector(".image-modal-content");
     if (content) content.addEventListener("click", (event) => event.stopPropagation());
-    const closeBtn = modal.querySelector(".image-modal-bar button");
+    const closeBtn = modal.querySelector("[data-modal-close]");
     if (closeBtn) closeBtn.addEventListener("click", () => removeModal());
+    const prevBtn = modal.querySelector("[data-modal-prev]");
+    if (prevBtn) prevBtn.addEventListener("click", () => openModalByIndex(activeImageIndex - 1));
+    const nextBtn = modal.querySelector("[data-modal-next]");
+    if (nextBtn) nextBtn.addEventListener("click", () => openModalByIndex(activeImageIndex + 1));
     document.body.appendChild(modal);
   };
 
-  document.querySelectorAll(".media-open-trigger").forEach((trigger) => {
+  document.querySelectorAll(".media-open-trigger").forEach((trigger, index) => {
     trigger.addEventListener("click", (event) => {
       event.preventDefault();
-      const img = trigger.querySelector("img");
-      if (!img) return;
-      openModal(img.getAttribute("src") || "", img.getAttribute("alt") || "");
+      openModalByIndex(index);
     });
   });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") removeModal();
+    if (event.key === "ArrowRight" && activeImageIndex >= 0) openModalByIndex(activeImageIndex + 1);
+    if (event.key === "ArrowLeft" && activeImageIndex >= 0) openModalByIndex(activeImageIndex - 1);
   });
 
   onScroll();

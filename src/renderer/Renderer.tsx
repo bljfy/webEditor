@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PageConfig } from "../schema/pageConfig";
 
 type RendererProps = {
@@ -9,6 +9,42 @@ type ViewerImage = {
   src: string;
   title: string;
 };
+
+function collectViewerImages(config: PageConfig): ViewerImage[] {
+  const list: ViewerImage[] = [];
+  const push = (src?: string, title?: string) => {
+    if (!src || !src.trim()) return;
+    list.push({ src, title: title?.trim() || "未命名图片" });
+  };
+
+  config.hero.gallery.forEach((item) => push(item.image.src, item.image.title));
+
+  config.sections.forEach((section) => {
+    if (section.kind === "narrative") return;
+
+    if (section.kind === "strip-gallery") {
+      section.content.items.forEach((item) => push(item.image.src, item.image.title));
+      return;
+    }
+
+    if (section.kind === "model-stage") {
+      push(section.content.main.image.src, section.content.main.image.title);
+      section.content.secondary?.forEach((item) => push(item.image.src, item.image.title));
+      return;
+    }
+
+    if (section.kind === "atlas-grid") {
+      section.content.items.forEach((item) => {
+        if (!item.placeholder) push(item.image?.src, item.image?.title);
+      });
+      return;
+    }
+
+    section.content.items.forEach((item) => push(item.image.src, item.image.title));
+  });
+
+  return list;
+}
 
 function joinTags(tags?: string[]) {
   return tags?.length ? tags.join(" / ") : "";
@@ -147,14 +183,18 @@ function sectionVisibleClass(isClient: boolean, visibleMap: Record<string, boole
 export function Renderer({ config }: RendererProps) {
   const isClient = typeof window !== "undefined";
   const firstSectionId = useMemo(() => config.sections[0]?.id ?? "", [config.sections]);
+  const viewerImages = useMemo(() => collectViewerImages(config), [config]);
   const [activeSectionId, setActiveSectionId] = useState(firstSectionId);
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
-  const [activeImage, setActiveImage] = useState<ViewerImage | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const activeImage = activeImageIndex === null ? null : viewerImages[activeImageIndex] ?? null;
 
   useEffect(() => {
     setActiveSectionId(config.sections[0]?.id ?? "");
     setVisibleSections({});
+    setActiveImageIndex(null);
   }, [config.sections]);
 
   useEffect(() => {
@@ -257,6 +297,36 @@ export function Renderer({ config }: RendererProps) {
     };
   }, [config.sections, isClient]);
 
+  function openImage(image: ViewerImage) {
+    const index = viewerImages.findIndex((item) => item.src === image.src && item.title === image.title);
+    setActiveImageIndex(index >= 0 ? index : 0);
+  }
+
+  const closeImage = useCallback(() => {
+    setActiveImageIndex(null);
+  }, []);
+
+  const shiftImage = useCallback((step: number) => {
+    if (!viewerImages.length) return;
+    setActiveImageIndex((prev) => {
+      const current = prev ?? 0;
+      return (current + step + viewerImages.length) % viewerImages.length;
+    });
+  }, [viewerImages.length]);
+
+  useEffect(() => {
+    if (activeImageIndex === null) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeImage();
+      if (event.key === "ArrowRight") shiftImage(1);
+      if (event.key === "ArrowLeft") shiftImage(-1);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeImageIndex, closeImage, shiftImage]);
+
   return (
     <div ref={rootRef} className="render-root" data-theme={config.theme.background}>
       <div className="render-noise" aria-hidden="true" />
@@ -303,12 +373,7 @@ export function Renderer({ config }: RendererProps) {
               <button
                 type="button"
                 className="media-open-trigger"
-                onClick={() =>
-                  setActiveImage({
-                    src: item.image.src,
-                    title: item.image.title || "未命名图片"
-                  })
-                }
+                onClick={() => openImage({ src: item.image.src, title: item.image.title || "未命名图片" })}
                 aria-label={`查看图片：${item.image.title || "未命名图片"}`}
               >
                 <img src={item.image.src} alt={item.image.title || "hero-image"} />
@@ -328,17 +393,25 @@ export function Renderer({ config }: RendererProps) {
             <h3>{section.title}</h3>
             {section.subtitle ? <p>{section.subtitle}</p> : null}
           </header>
-          {renderSection(section, setActiveImage)}
+          {renderSection(section, openImage)}
         </section>
       ))}
 
       {activeImage ? (
-        <div className="image-modal" onClick={() => setActiveImage(null)}>
+        <div className="image-modal" onClick={closeImage}>
           <div className="image-modal-content" onClick={(event) => event.stopPropagation()}>
             <img src={activeImage.src} alt={activeImage.title} />
             <div className="image-modal-bar">
+              <div className="image-modal-nav">
+                <button type="button" onClick={() => shiftImage(-1)} aria-label="上一张">
+                  上一张
+                </button>
+                <button type="button" onClick={() => shiftImage(1)} aria-label="下一张">
+                  下一张
+                </button>
+              </div>
               <span>{activeImage.title}</span>
-              <button type="button" onClick={() => setActiveImage(null)}>
+              <button type="button" onClick={closeImage}>
                 关闭
               </button>
             </div>

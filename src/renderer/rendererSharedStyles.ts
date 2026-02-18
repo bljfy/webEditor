@@ -408,9 +408,15 @@ export const RENDERER_SHARED_CSS = `
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   background: rgba(15, 22, 30, 0.95);
   color: #ecf4ff;
+}
+
+.image-modal-nav {
+  display: flex;
+  gap: 8px;
 }
 
 .image-modal-bar button {
@@ -538,6 +544,20 @@ export const RENDERER_SHARED_CSS = `
 
   .hero-stats {
     grid-template-columns: 1fr;
+  }
+
+  .image-modal-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .image-modal-nav {
+    width: 100%;
+  }
+
+  .image-modal-nav button,
+  .image-modal-bar > button {
+    width: 100%;
   }
 }
 
