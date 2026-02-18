@@ -27,12 +27,13 @@ describe("App", () => {
     render(<App />);
 
     const heroTitleInput = screen.getByLabelText("主标题") as HTMLInputElement;
+    const originalValue = heroTitleInput.value;
     fireEvent.change(heroTitleInput, { target: { value: "第一次修改" } });
     fireEvent.change(heroTitleInput, { target: { value: "第二次修改" } });
     expect(heroTitleInput.value).toBe("第二次修改");
 
     fireEvent.click(screen.getByRole("button", { name: "撤销" }));
-    expect(heroTitleInput.value).toBe("第一次修改");
+    expect(heroTitleInput.value).toBe(originalValue);
 
     fireEvent.click(screen.getByRole("button", { name: "重做" }));
     expect(heroTitleInput.value).toBe("第二次修改");
@@ -51,5 +52,23 @@ describe("App", () => {
 
     expect(screen.queryByRole("link", { name: "01 项目叙述" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "01 我的条带" })).toBeInTheDocument();
+  });
+
+  it("supports keyboard section reorder with alt+arrow keys", () => {
+    render(<App />);
+
+    const sectionTitlesBefore = Array.from(document.querySelectorAll(".section-editor .section-title")).map((node) =>
+      node.textContent?.trim()
+    );
+    const firstSectionTitle = screen.getByText("01 项目叙述 · 图文叙述");
+    const firstSectionEditor = firstSectionTitle.closest("details");
+    expect(firstSectionEditor).not.toBeNull();
+
+    fireEvent.focus(firstSectionEditor as HTMLElement);
+    fireEvent.keyDown(firstSectionEditor as HTMLElement, { key: "ArrowDown", altKey: true });
+    const sectionTitlesAfter = Array.from(document.querySelectorAll(".section-editor .section-title")).map((node) =>
+      node.textContent?.trim()
+    );
+    expect(sectionTitlesAfter[0]).not.toBe(sectionTitlesBefore[0]);
   });
 });

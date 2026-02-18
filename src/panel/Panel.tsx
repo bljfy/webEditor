@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   type PageConfig,
   type SectionKind,
@@ -59,6 +59,11 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
   const [historyFuture, setHistoryFuture] = useState<PageConfig[]>([]);
   const [draggingSectionIndex, setDraggingSectionIndex] = useState<number | null>(null);
   const [dragOverSectionIndex, setDragOverSectionIndex] = useState<number | null>(null);
+  const [keyboardActiveSectionIndex, setKeyboardActiveSectionIndex] = useState<number | null>(null);
+  const historyMergeMetaRef = useRef<{ at: number; key: string | null }>({ at: 0, key: null });
+  const draftRef = useRef<PageConfig>(draftConfig);
+  const historyPastRef = useRef<PageConfig[]>(historyPast);
+  const historyFutureRef = useRef<PageConfig[]>(historyFuture);
 
   const sectionKinds = useMemo<SectionKind[]>(
     () => ["narrative", "strip-gallery", "model-stage", "atlas-grid", "masonry-gallery"],
@@ -73,7 +78,22 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
     setDraftConfig(syncNavFromSections(pageConfig));
     setHistoryPast([]);
     setHistoryFuture([]);
+    historyPastRef.current = [];
+    historyFutureRef.current = [];
+    historyMergeMetaRef.current = { at: 0, key: null };
   }, [pageConfig]);
+
+  useEffect(() => {
+    draftRef.current = draftConfig;
+  }, [draftConfig]);
+
+  useEffect(() => {
+    historyPastRef.current = historyPast;
+  }, [historyPast]);
+
+  useEffect(() => {
+    historyFutureRef.current = historyFuture;
+  }, [historyFuture]);
 
   useEffect(() => {
     onUnsavedChange?.(hasUnsavedChanges);
@@ -109,21 +129,47 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
     setDraftConfig(structuredClone(report.data));
     setHistoryPast([]);
     setHistoryFuture([]);
+    historyPastRef.current = [];
+    historyFutureRef.current = [];
+    historyMergeMetaRef.current = { at: 0, key: null };
     setFieldErrors({});
     setErrorMessage("");
     setSaveMessage("已保存，预览已更新。");
     onSaved?.(new Date().toISOString());
   }
 
-  function update(mutator: (draft: PageConfig) => void) {
-    setDraftConfig((prev) => {
-      const next = structuredClone(prev);
-      mutator(next);
-      const synced = syncNavFromSections(next);
-      setHistoryPast((past) => [...past.slice(-49), prev]);
-      setHistoryFuture([]);
-      return synced;
-    });
+  function update(
+    mutator: (draft: PageConfig) => void,
+    options?: {
+      mergeWithPrevious?: boolean;
+      mergeKey?: string;
+    }
+  ) {
+    const prev = structuredClone(draftRef.current);
+    const next = structuredClone(draftRef.current);
+    mutator(next);
+    const synced = syncNavFromSections(next);
+    const now = Date.now();
+    const mergeWithPrevious =
+      options?.mergeWithPrevious &&
+      options?.mergeKey &&
+      historyMergeMetaRef.current.key === options.mergeKey &&
+      now - historyMergeMetaRef.current.at <= 400;
+
+    if (!mergeWithPrevious) {
+      const nextPast = [...historyPastRef.current.slice(-49), prev];
+      historyPastRef.current = nextPast;
+      setHistoryPast(nextPast);
+    }
+
+    historyFutureRef.current = [];
+    setHistoryFuture([]);
+    historyMergeMetaRef.current = {
+      at: now,
+      key: options?.mergeWithPrevious ? (options.mergeKey ?? null) : null
+    };
+    draftRef.current = synced;
+    setDraftConfig(synced);
     setSaveMessage("");
     setFieldErrors({});
     if (errorMessage) {
@@ -131,32 +177,56 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
     }
   }
 
+  function updateInput(mutator: (draft: PageConfig) => void, mergeKey = "input") {
+    update(mutator, { mergeWithPrevious: true, mergeKey });
+  }
+
   function undoDraft() {
-    if (!historyPast.length) return;
-    const previous = historyPast[historyPast.length - 1];
-    setHistoryPast((past) => past.slice(0, -1));
-    setHistoryFuture((future) => [structuredClone(draftConfig), ...future.slice(0, 49)]);
+    if (!historyPastRef.current.length) return;
+    const previous = historyPastRef.current[historyPastRef.current.length - 1];
+    const nextPast = historyPastRef.current.slice(0, -1);
+    const nextFuture = [structuredClone(draftRef.current), ...historyFutureRef.current.slice(0, 49)];
+    historyPastRef.current = nextPast;
+    historyFutureRef.current = nextFuture;
+    setHistoryPast(nextPast);
+    setHistoryFuture(nextFuture);
     setDraftConfig(structuredClone(previous));
     setSaveMessage("");
     setFieldErrors({});
     setErrorMessage("");
+    historyMergeMetaRef.current = { at: 0, key: null };
   }
 
   function redoDraft() {
-    if (!historyFuture.length) return;
-    const [next, ...rest] = historyFuture;
+    if (!historyFutureRef.current.length) return;
+    const [next, ...rest] = historyFutureRef.current;
+    const nextPast = [...historyPastRef.current.slice(-49), structuredClone(draftRef.current)];
+    historyFutureRef.current = rest;
+    historyPastRef.current = nextPast;
     setHistoryFuture(rest);
-    setHistoryPast((past) => [...past.slice(-49), structuredClone(draftConfig)]);
+    setHistoryPast(nextPast);
     setDraftConfig(structuredClone(next));
     setSaveMessage("");
     setFieldErrors({});
     setErrorMessage("");
+    historyMergeMetaRef.current = { at: 0, key: null };
   }
 
   function reorderSection(fromIndex: number, toIndex: number) {
     if (fromIndex === toIndex) return;
     update((draft) => {
       draft.sections = moveArrayItem(draft.sections, fromIndex, toIndex);
+    });
+  }
+
+  function reorderSectionByKeyboard(fromIndex: number, direction: -1 | 1) {
+    const toIndex = fromIndex + direction;
+    if (toIndex < 0 || toIndex >= draftConfig.sections.length) return;
+    reorderSection(fromIndex, toIndex);
+    setKeyboardActiveSectionIndex(toIndex);
+    window.requestAnimationFrame(() => {
+      const node = document.querySelector<HTMLElement>(`[data-section-editor-index="${toIndex}"]`);
+      node?.focus();
     });
   }
 
@@ -223,7 +293,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
       </p>
       <p className="panel-hint">{uiMode === "simple" ? "当前为简洁模式：仅展示高频配置。" : "当前为高级模式：展示全部可编辑项。"}</p>
       <p className="panel-hint">导航栏由内容区块自动生成，可按区块勾选是否加入，并可单独设置导航显示文字。</p>
-      <p className="panel-hint">支持撤销/重做（Ctrl/Cmd + Z、Ctrl/Cmd + Y），区块支持拖拽排序。</p>
+      <p className="panel-hint">支持撤销/重做（Ctrl/Cmd + Z、Ctrl/Cmd + Y），区块支持拖拽与 Alt + ↑/↓ 键盘排序。</p>
       {errorMessage ? <p className="panel-error">{errorMessage}</p> : null}
       {saveMessage ? <p className="panel-success">{saveMessage}</p> : null}
 
@@ -236,9 +306,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           <input
             value={draftConfig.meta.title}
             onChange={(event) =>
-              update((draft) => {
+              updateInput((draft) => {
                 draft.meta.title = event.target.value;
-              })
+              }, "meta.title")
             }
           />
           {renderFieldError("meta.title")}
@@ -248,9 +318,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           <textarea
             value={draftConfig.meta.description ?? ""}
             onChange={(event) =>
-              update((draft) => {
+              updateInput((draft) => {
                 draft.meta.description = event.target.value;
-              })
+              }, "meta.description")
             }
           />
         </label>
@@ -259,9 +329,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           <select
             value={draftConfig.meta.language}
             onChange={(event) =>
-              update((draft) => {
+              updateInput((draft) => {
                 draft.meta.language = event.target.value as "zh-CN" | "en";
-              })
+              }, "meta.language")
             }
           >
             <option value="zh-CN">中文（简体）</option>
@@ -280,9 +350,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           <input
             value={draftConfig.hero.eyebrow ?? ""}
             onChange={(event) =>
-              update((draft) => {
+              updateInput((draft) => {
                 draft.hero.eyebrow = event.target.value;
-              })
+              }, "hero.eyebrow")
             }
           />
         </label>
@@ -291,9 +361,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           <input
             value={draftConfig.hero.title}
             onChange={(event) =>
-              update((draft) => {
+              updateInput((draft) => {
                 draft.hero.title = event.target.value;
-              })
+              }, "hero.title")
             }
           />
           {renderFieldError("hero.title")}
@@ -303,9 +373,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           <textarea
             value={draftConfig.hero.lead}
             onChange={(event) =>
-              update((draft) => {
+              updateInput((draft) => {
                 draft.hero.lead = event.target.value;
-              })
+              }, "hero.lead")
             }
           />
         </label>
@@ -426,7 +496,21 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
         {draftConfig.sections.map((section, index) => (
           <details
             key={section.id}
-            className={`section-editor ${dragOverSectionIndex === index ? "drag-over" : ""}`}
+            tabIndex={0}
+            data-section-editor-index={index}
+            onFocus={() => setKeyboardActiveSectionIndex(index)}
+            onKeyDown={(event) => {
+              if (!event.altKey) return;
+              if (event.key === "ArrowUp") {
+                event.preventDefault();
+                reorderSectionByKeyboard(index, -1);
+              }
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                reorderSectionByKeyboard(index, 1);
+              }
+            }}
+            className={`section-editor ${dragOverSectionIndex === index ? "drag-over" : ""} ${keyboardActiveSectionIndex === index ? "keyboard-active" : ""}`}
             onDragOver={(event) => {
               event.preventDefault();
               if (dragOverSectionIndex !== index) {
@@ -503,9 +587,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
               <input
                 value={section.title}
                 onChange={(event) =>
-                  update((draft) => {
+                  updateInput((draft) => {
                     draft.sections[index].title = event.target.value;
-                  })
+                  }, `sections.${index}.title`)
                 }
               />
               {renderFieldError(`sections.${index}.title`)}
@@ -517,9 +601,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
                   type="checkbox"
                   checked={section.includeInNav !== false}
                   onChange={(event) =>
-                    update((draft) => {
+                    updateInput((draft) => {
                       draft.sections[index].includeInNav = event.target.checked;
-                    })
+                    }, `sections.${index}.includeInNav`)
                   }
                 />
                 加入导航栏
@@ -531,9 +615,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
                   value={section.navLabel ?? ""}
                   placeholder="不填则使用区块标题"
                   onChange={(event) =>
-                    update((draft) => {
+                    updateInput((draft) => {
                       draft.sections[index].navLabel = event.target.value;
-                    })
+                    }, `sections.${index}.navLabel`)
                   }
                 />
                 {renderFieldError(`sections.${index}.navLabel`)}
@@ -545,9 +629,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
               <input
                 value={section.subtitle ?? ""}
                 onChange={(event) =>
-                  update((draft) => {
+                  updateInput((draft) => {
                     draft.sections[index].subtitle = event.target.value;
-                  })
+                  }, `sections.${index}.subtitle`)
                 }
               />
             </label>

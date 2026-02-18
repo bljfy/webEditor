@@ -562,6 +562,12 @@ export const RENDERER_SHARED_CSS = `
 }
 
 @media (max-width: 900px) {
+  .render-root {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
   .section-grid-atlas,
   .section-grid-model {
     grid-template-columns: 1fr;
