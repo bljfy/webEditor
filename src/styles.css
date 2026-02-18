@@ -35,16 +35,11 @@ body {
 }
 
 .editor-shell {
-  max-height: calc(100vh - 24px);
-  overflow: auto;
+  align-self: start;
 }
 
 .panel-title-row {
-  position: sticky;
-  top: -12px;
-  z-index: 2;
-  padding: 10px 0;
-  background: #fff;
+  padding: 4px 0 10px;
 }
 
 .panel-title-row h2 {
@@ -346,7 +341,7 @@ button {
   }
 
   .editor-shell {
-    max-height: none;
+    align-self: stretch;
   }
 
   .render-hero,
