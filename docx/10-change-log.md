@@ -227,7 +227,7 @@
   - 若后续需要保留“真实瀑布流”表达，可提供“统一网格/瀑布流”切换配置项。
 
 ### 22) Phase 4：CI/CD 与 GitHub Pages 自动发布接入
-- 提交：`待本次提交`
+- 提交：`8d5c928`
 - 改动内容：
   - 新增 GitHub Actions `CI` 工作流：在 `main` 分支 push / PR 自动执行 `lint + test + build`。
   - 新增 GitHub Actions `Deploy To GitHub Pages` 工作流：在 `main` push 自动构建并发布 `dist` 到 Pages。
