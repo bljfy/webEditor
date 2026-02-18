@@ -157,7 +157,10 @@ function normalizeFileName(title: string): string {
 }
 
 export function renderRendererMarkup(config: PageConfig): string {
-  return renderToStaticMarkup(<Renderer config={config} />);
+  const markup = renderToStaticMarkup(<Renderer config={config} />);
+  return markup
+    .replaceAll("section-anim ", "section-anim visible ")
+    .replaceAll("section-anim\"", "section-anim visible\"");
 }
 
 export function createExportHtml(config: PageConfig): string {

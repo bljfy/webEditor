@@ -305,13 +305,15 @@ button {
 
 .render-topbar {
   position: sticky;
-  top: 0;
+  top: 8px;
   z-index: 5;
   display: flex;
   justify-content: space-between;
   gap: 10px;
   padding: 10px;
   backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  box-shadow: 0 10px 22px color-mix(in srgb, #000 15%, transparent);
 }
 
 .render-topbar nav {
@@ -336,12 +338,20 @@ button {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent) inset;
 }
 
+.render-nav-link.active {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--accent) 76%, transparent);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent) inset;
+}
+
 .render-hero {
   margin-top: 10px;
   padding: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  transform: translateY(calc(var(--scroll-y, 0px) * 0.02));
   animation: heroFloatIn 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
@@ -420,6 +430,17 @@ button {
   margin-top: 10px;
   padding: 11px;
   overflow: hidden;
+  scroll-margin-top: 86px;
+}
+
+.render-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--accent) 10%, transparent) 48%, transparent 75%);
+  transform: translateX(-100%);
+  transition: transform 1.2s ease;
+  pointer-events: none;
 }
 
 .render-section header h3 {
@@ -550,31 +571,16 @@ button {
 .section-anim {
   opacity: 0;
   transform: translateY(22px);
-  animation: sectionFadeUp 0.75s cubic-bezier(0.2, 0.7, 0.1, 1) forwards;
+  transition: transform 0.85s cubic-bezier(0.2, 0.7, 0.1, 1), opacity 0.85s ease;
 }
 
-.render-root > .section-anim:nth-of-type(1) {
-  animation-delay: 0.12s;
+.section-anim.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.render-root > .section-anim:nth-of-type(2) {
-  animation-delay: 0.2s;
-}
-
-.render-root > .section-anim:nth-of-type(3) {
-  animation-delay: 0.28s;
-}
-
-.render-root > .section-anim:nth-of-type(4) {
-  animation-delay: 0.36s;
-}
-
-.render-root > .section-anim:nth-of-type(5) {
-  animation-delay: 0.44s;
-}
-
-.render-root > .section-anim:nth-of-type(6) {
-  animation-delay: 0.52s;
+.section-anim.visible::before {
+  transform: translateX(42%);
 }
 
 @keyframes sectionFadeUp {

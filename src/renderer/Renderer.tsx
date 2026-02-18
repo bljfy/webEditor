@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PageConfig } from "../schema/pageConfig";
 
 type RendererProps = {
@@ -117,15 +118,108 @@ function renderSection(section: PageConfig["sections"][number]) {
   );
 }
 
+function sectionVisibleClass(isClient: boolean, visibleMap: Record<string, boolean>, id: string) {
+  if (!isClient) return "visible";
+  return visibleMap[id] ? "visible" : "";
+}
+
 export function Renderer({ config }: RendererProps) {
+  const isClient = typeof window !== "undefined";
+  const firstSectionId = useMemo(() => config.sections[0]?.id ?? "", [config.sections]);
+  const [activeSectionId, setActiveSectionId] = useState(firstSectionId);
+  const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setActiveSectionId(config.sections[0]?.id ?? "");
+    setVisibleSections({});
+  }, [config.sections]);
+
+  useEffect(() => {
+    if (!rootRef.current || !isClient) return;
+
+    const rootElement = rootRef.current;
+    const scrollContainer = rootElement.closest(".preview-shell") as HTMLElement | null;
+
+    const updateParallax = () => {
+      const scrollTop = scrollContainer?.scrollTop ?? window.scrollY;
+      rootElement.style.setProperty("--scroll-y", `${scrollTop}px`);
+    };
+
+    updateParallax();
+    const listenerTarget: HTMLElement | Window = scrollContainer ?? window;
+    listenerTarget.addEventListener("scroll", updateParallax, { passive: true });
+
+    return () => {
+      listenerTarget.removeEventListener("scroll", updateParallax);
+    };
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!rootRef.current || !isClient || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const rootElement = rootRef.current;
+    const sections = Array.from(rootElement.querySelectorAll<HTMLElement>(".render-section"));
+    if (!sections.length) return;
+
+    const scrollContainer = rootElement.closest(".preview-shell") as HTMLElement | null;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let nextActiveId: string | null = null;
+        let maxRatio = 0;
+
+        setVisibleSections((prev) => {
+          const next = { ...prev };
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              next[(entry.target as HTMLElement).id] = true;
+            }
+
+            if (entry.isIntersecting && entry.intersectionRatio >= maxRatio) {
+              maxRatio = entry.intersectionRatio;
+              nextActiveId = (entry.target as HTMLElement).id;
+            }
+          }
+          return next;
+        });
+
+        if (nextActiveId) {
+          setActiveSectionId(nextActiveId);
+        }
+      },
+      {
+        root: scrollContainer,
+        threshold: [0.2, 0.35, 0.55, 0.75]
+      }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [config.sections, isClient]);
+
   return (
-    <div className="render-root" data-theme={config.theme.background}>
+    <div ref={rootRef} className="render-root" data-theme={config.theme.background}>
       <div className="render-noise" aria-hidden="true" />
       <header className="render-topbar">
         <strong>{config.nav.brand}</strong>
         <nav>
           {config.nav.items.map((item) => (
-            <a key={item.id} href={`#${item.id}`} className="render-nav-link">
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className={`render-nav-link ${activeSectionId === item.id ? "active" : ""}`}
+              onClick={(event) => {
+                event.preventDefault();
+                const target = rootRef.current?.querySelector<HTMLElement>(`#${item.id}`);
+                if (target) {
+                  target.scrollIntoView({ behavior: "smooth", block: "start" });
+                  setActiveSectionId(item.id);
+                }
+              }}
+            >
               {item.label}
             </a>
           ))}
@@ -156,7 +250,11 @@ export function Renderer({ config }: RendererProps) {
       </section>
 
       {config.sections.map((section) => (
-        <section id={section.id} key={section.id} className="render-section section-anim">
+        <section
+          id={section.id}
+          key={section.id}
+          className={`render-section section-anim ${sectionVisibleClass(isClient, visibleSections, section.id)}`}
+        >
           <header>
             <h3>{section.title}</h3>
             {section.subtitle ? <p>{section.subtitle}</p> : null}
