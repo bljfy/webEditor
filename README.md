@@ -47,6 +47,20 @@ npm run build
 - `npm run build`：类型检查 + 生产构建
 - `npm run preview`：预览构建产物
 
+## CI/CD 与 GitHub Pages
+- 已接入 GitHub Actions：
+  - `CI`：`main` 分支 push / PR 时自动执行 `lint + test + build`。
+  - `Deploy To GitHub Pages`：`main` 分支 push 时自动构建并发布到 GitHub Pages。
+- 工作流文件：
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/deploy-pages.yml`
+- 部署前一次性配置：
+  1. GitHub 仓库 `Settings -> Pages -> Build and deployment` 选择 `GitHub Actions`。
+  2. 推送到 `main` 后等待 `Deploy To GitHub Pages` 成功。
+- `base` 路径策略：
+  - 仓库名为 `*.github.io` 时自动使用 `/`。
+  - 其他仓库自动使用 `/<repo-name>/`，避免静态资源路径错误。
+
 ## 目录结构
 ```text
 src/
@@ -80,5 +94,5 @@ docx/
 
 ## 已知技术负债
 - 预览与导出一致性目前为结构一致性校验，尚未覆盖像素级视觉回归。
-- e2e 测试与 CI/CD（GitHub Pages）尚未接入。
+- e2e 测试尚未接入，当前自动化测试以 unit/integration 为主。
 - 可继续增强：未保存离开提醒、撤销/重做、区块拖拽排序。

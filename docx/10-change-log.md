@@ -225,3 +225,15 @@
   - 瀑布墙与叙述图片区在常见桌面分辨率下可一屏展示更多内容，视觉秩序更稳定。
 - 技术负债/后续事项：
   - 若后续需要保留“真实瀑布流”表达，可提供“统一网格/瀑布流”切换配置项。
+
+### 22) Phase 4：CI/CD 与 GitHub Pages 自动发布接入
+- 提交：`待本次提交`
+- 改动内容：
+  - 新增 GitHub Actions `CI` 工作流：在 `main` 分支 push / PR 自动执行 `lint + test + build`。
+  - 新增 GitHub Actions `Deploy To GitHub Pages` 工作流：在 `main` push 自动构建并发布 `dist` 到 Pages。
+  - Vite 新增 `VITE_BASE_PATH` 支持，并在部署工作流按仓库名自动计算 Pages `base` 路径（`/` 或 `/<repo>/`）。
+  - README 与 agent 维护规则同步更新，明确部署步骤与变更约束。
+- 影响范围：
+  - 代码质量门禁与静态发布流程自动化，减少手工发布与路径配置错误。
+- 技术负债/后续事项：
+  - 目前仅接入 unit/integration 级测试；后续可补充 Playwright e2e 与视觉回归后再纳入发布门禁。
