@@ -17,6 +17,8 @@ export const RENDERER_SHARED_CSS = `
   border-radius: 10px;
   position: relative;
   overflow: visible;
+  max-width: 1320px;
+  margin: 0 auto;
 }
 
 .render-root::after {
@@ -225,7 +227,7 @@ export const RENDERER_SHARED_CSS = `
 }
 
 .section-grid-narrative {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .section-grid-strip {
@@ -264,6 +266,20 @@ export const RENDERER_SHARED_CSS = `
 .section-grid-masonry .media-card {
   margin-bottom: 8px;
   break-inside: avoid;
+}
+
+.section-grid-masonry .media-open-trigger,
+.section-grid-masonry .media-card img {
+  height: auto;
+}
+
+.section-grid-strip .media-open-trigger,
+.section-grid-strip .media-card img {
+  aspect-ratio: 16 / 10;
+}
+
+.section-grid-atlas .media-card:first-child {
+  grid-row: span 2;
 }
 
 .narrative-card,
@@ -419,7 +435,6 @@ export const RENDERER_SHARED_CSS = `
 
 @media (max-width: 1080px) {
   .render-hero,
-  .section-grid-narrative,
   .section-grid-model,
   .section-grid-atlas {
     grid-template-columns: 1fr;
@@ -440,10 +455,38 @@ export const RENDERER_SHARED_CSS = `
   .section-grid-masonry {
     columns: 3 190px;
   }
+
+  .section-grid-atlas .media-card:first-child {
+    grid-row: auto;
+  }
+}
+
+@media (min-width: 1500px) {
+  .render-root {
+    max-width: 1640px;
+  }
+
+  .section-grid-strip {
+    grid-auto-flow: unset;
+    grid-auto-columns: unset;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .section-grid-narrative {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .section-grid-atlas {
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  }
+
+  .section-grid-masonry {
+    columns: 5 230px;
+  }
 }
 
 @media (max-width: 900px) {
-  .section-grid-narrative,
   .section-grid-atlas,
   .section-grid-model {
     grid-template-columns: 1fr;

@@ -11,6 +11,9 @@ describe("export html", () => {
     expect(html).toContain(`<title>${config.meta.title}</title>`);
     expect(html).toContain("<style>");
     expect(html).toContain("render-root");
+    expect(html).toContain("media-open-trigger");
+    expect(html).toContain("window.addEventListener(\"scroll\", onScroll");
+    expect(html).toContain("document.querySelectorAll(\".media-open-trigger\")");
   });
 
   it("keeps renderer markup consistent between preview and export", () => {
