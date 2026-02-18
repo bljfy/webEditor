@@ -250,6 +250,81 @@ export function Panel({ pageConfig, setPageConfig, onExportHtml }: PanelProps) {
       </details>
 
       <details className="panel-group">
+        <summary>页脚设置</summary>
+        <div className="panel-group-body">
+          <label>
+            页脚标语
+            <input
+              value={draftConfig.footer.slogan}
+              onChange={(event) =>
+                update((draft) => {
+                  draft.footer.slogan = event.target.value;
+                })
+              }
+            />
+          </label>
+          <label>
+            版权文案（可选）
+            <input
+              value={draftConfig.footer.copyright ?? ""}
+              onChange={(event) =>
+                update((draft) => {
+                  draft.footer.copyright = event.target.value;
+                })
+              }
+            />
+          </label>
+          {(draftConfig.footer.links ?? []).map((link, index) => (
+            <div key={`footer-link-${index}`} className="array-row">
+              <input
+                value={link.label}
+                aria-label={`footer-label-${index}`}
+                placeholder="链接名称"
+                onChange={(event) =>
+                  update((draft) => {
+                    draft.footer.links[index].label = event.target.value;
+                  })
+                }
+              />
+              <input
+                value={link.href}
+                aria-label={`footer-href-${index}`}
+                placeholder="链接地址（如 #narrative / https://...）"
+                onChange={(event) =>
+                  update((draft) => {
+                    draft.footer.links[index].href = event.target.value;
+                  })
+                }
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  update((draft) => {
+                    draft.footer.links.splice(index, 1);
+                  })
+                }
+              >
+                删除
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() =>
+              update((draft) => {
+                draft.footer.links.push({
+                  label: `页脚链接 ${draft.footer.links.length + 1}`,
+                  href: "#"
+                });
+              })
+            }
+          >
+            新增页脚链接
+          </button>
+        </div>
+      </details>
+
+      <details className="panel-group">
         <summary>首屏（Hero）</summary>
         <div className="panel-group-body">
         <label>

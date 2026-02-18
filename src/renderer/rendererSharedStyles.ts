@@ -442,6 +442,64 @@ export const RENDERER_SHARED_CSS = `
   cursor: pointer;
 }
 
+.render-footer {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--panel) 88%, var(--accent) 12%), color-mix(in srgb, var(--panel) 90%, var(--accent-2) 10%));
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 14px 28px color-mix(in srgb, #000 12%, transparent);
+}
+
+.render-footer-brand strong {
+  display: block;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.render-footer-brand p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.render-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.render-footer-links a {
+  text-decoration: none;
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--line) 74%, var(--accent) 26%);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  transition: all 0.28s ease;
+}
+
+.render-footer-links a:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent) inset;
+}
+
+.render-footer-copy {
+  justify-self: end;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 @keyframes heroFloatIn {
   from {
     opacity: 0;
@@ -519,6 +577,19 @@ export const RENDERER_SHARED_CSS = `
 
   .media-placeholder {
     min-height: 120px;
+  }
+
+  .render-footer {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .render-footer-links {
+    justify-content: flex-start;
+  }
+
+  .render-footer-copy {
+    justify-self: start;
   }
 }
 

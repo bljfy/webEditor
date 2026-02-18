@@ -50,6 +50,10 @@ function joinTags(tags?: string[]) {
   return tags?.length ? tags.join(" / ") : "";
 }
 
+function getCurrentYear() {
+  return new Date().getFullYear();
+}
+
 function MediaCard({
   src,
   title,
@@ -399,6 +403,24 @@ export function Renderer({ config }: RendererProps) {
           {renderSection(section, openImage)}
         </section>
       ))}
+
+      <footer className="render-footer">
+        <div className="render-footer-brand">
+          <strong>{config.meta.title}</strong>
+          <p>{config.footer.slogan || config.meta.description || "面向零代码用户的可视化页面模板"}</p>
+        </div>
+        <div className="render-footer-links">
+          {config.footer.links.map((item, index) => (
+            <a key={`footer-link-${index}`} href={item.href}>
+              {item.label}
+            </a>
+          ))}
+        </div>
+        <div className="render-footer-copy">
+          © {getCurrentYear()} {config.meta.title}
+          {config.footer.copyright ? ` · ${config.footer.copyright}` : ""}
+        </div>
+      </footer>
 
       {activeImage ? (
         <div className="image-modal" onClick={closeImage}>

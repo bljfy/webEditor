@@ -31,6 +31,11 @@ const heroGalleryItemSchema = z.object({
   image: imageAssetSchema
 });
 
+const footerLinkSchema = z.object({
+  label: z.string().min(1),
+  href: z.string().min(1)
+});
+
 const narrativeSectionSchema = z.object({
   id: z.string().min(1),
   kind: z.literal("narrative"),
@@ -143,6 +148,11 @@ export const pageConfigSchema = z.object({
     stats: z.array(heroStatSchema).optional(),
     gallery: z.array(heroGalleryItemSchema).min(1)
   }),
+  footer: z.object({
+    slogan: z.string().min(1),
+    links: z.array(footerLinkSchema),
+    copyright: z.string().optional()
+  }),
   sections: z.array(sectionSchema)
 });
 
@@ -192,6 +202,15 @@ export const defaultPageConfig: PageConfig = {
         image: { src: "https://picsum.photos/seed/template-sub2/960/640", title: "副图二" }
       }
     ]
+  },
+  footer: {
+    slogan: "让每个人都能快速搭建好看的页面",
+    links: [
+      { label: "回到顶部", href: "#narrative" },
+      { label: "GitHub", href: "https://github.com" },
+      { label: "联系我们", href: "mailto:hello@example.com" }
+    ],
+    copyright: "保留所有权利"
   },
   sections: [
     {
@@ -283,6 +302,11 @@ const PATH_LABELS: Record<string, string> = {
   stats: "数据卡片",
   value: "数值",
   gallery: "图片区",
+  footer: "页脚",
+  slogan: "页脚标语",
+  links: "页脚链接",
+  href: "链接地址",
+  copyright: "版权文案",
   role: "图片角色",
   image: "图片",
   src: "图片地址",
