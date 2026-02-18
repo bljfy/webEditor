@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PageConfig } from "../schema/pageConfig";
 import { deriveNavItemsFromSections } from "../schema/nav";
+import { resolveScrollablePreviewShell } from "./scrollContext";
 
 type RendererProps = {
   config: PageConfig;
@@ -210,7 +211,7 @@ export function Renderer({ config }: RendererProps) {
     if (!rootRef.current || !isClient) return;
 
     const rootElement = rootRef.current;
-    const scrollContainer = rootElement.closest(".preview-shell") as HTMLElement | null;
+    const scrollContainer = resolveScrollablePreviewShell(rootElement);
 
     const updateParallax = () => {
       const scrollTop = scrollContainer?.scrollTop ?? window.scrollY;
@@ -238,7 +239,7 @@ export function Renderer({ config }: RendererProps) {
       return;
     }
 
-    const scrollContainer = rootElement.closest(".preview-shell") as HTMLElement | null;
+    const scrollContainer = resolveScrollablePreviewShell(rootElement);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -270,7 +271,7 @@ export function Renderer({ config }: RendererProps) {
     const sections = Array.from(rootElement.querySelectorAll<HTMLElement>(".render-section"));
     if (!sections.length) return;
 
-    const scrollContainer = rootElement.closest(".preview-shell") as HTMLElement | null;
+    const scrollContainer = resolveScrollablePreviewShell(rootElement);
     let rafId = 0;
 
     const updateActiveByScroll = () => {
