@@ -46,6 +46,10 @@ export function App() {
       <section className={`workspace-pane ${mobileView === "preview" ? "active" : ""}`}>
         <Preview config={pageConfig} hasUnsavedChanges={hasUnsavedChanges} lastSavedAt={lastSavedAt} />
       </section>
+      <footer className="workspace-footer">
+        <span>WebEditor · 面向零代码用户的可视化建站编辑器</span>
+        <span>当前模式：{mobileView === "editor" ? "编辑" : "预览"}</span>
+      </footer>
     </main>
   );
 }

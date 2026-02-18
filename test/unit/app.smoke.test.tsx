@@ -7,6 +7,7 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "编辑面板" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Preview" })).toBeInTheDocument();
+    expect(screen.getByText("WebEditor · 面向零代码用户的可视化建站编辑器")).toBeInTheDocument();
   });
 
   it("updates preview only after clicking save", () => {
