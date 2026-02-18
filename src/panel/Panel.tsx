@@ -228,8 +228,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
       {saveMessage ? <p className="panel-success">{saveMessage}</p> : null}
 
       <details className="panel-group" open>
-        <summary>站点信息</summary>
+        <summary>基础信息</summary>
         <div className="panel-group-body">
+        <p className="group-desc">定义页面的基本识别信息，会影响浏览器标题与语言。</p>
         <label>
           页面标题
           <input
@@ -270,134 +271,10 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
         </div>
       </details>
 
-      {uiMode === "advanced" ? (
-      <details className="panel-group">
-        <summary>外观样式</summary>
+      <details className="panel-group" open>
+        <summary>首页内容</summary>
         <div className="panel-group-body">
-        <label>
-          背景风格
-          <select
-            value={draftConfig.theme.background}
-            onChange={(event) =>
-              update((draft) => {
-                draft.theme.background = event.target.value as "light" | "dark";
-              })
-            }
-          >
-            <option value="light">浅色</option>
-            <option value="dark">深色</option>
-          </select>
-        </label>
-        <label>
-          主题色（可填 #1f6feb）
-          <input
-            value={draftConfig.theme.accentColor ?? ""}
-            onChange={(event) =>
-              update((draft) => {
-                draft.theme.accentColor = event.target.value;
-              })
-            }
-          />
-        </label>
-        <label>
-          圆角大小
-          <select
-            value={draftConfig.theme.radius ?? "md"}
-            onChange={(event) =>
-              update((draft) => {
-                draft.theme.radius = event.target.value as "sm" | "md" | "lg";
-              })
-            }
-          >
-            <option value="sm">小</option>
-            <option value="md">中</option>
-            <option value="lg">大</option>
-          </select>
-        </label>
-        </div>
-      </details>
-      ) : null}
-
-      {uiMode === "advanced" ? (
-      <details className="panel-group">
-        <summary>页脚设置</summary>
-        <div className="panel-group-body">
-          <label>
-            页脚标语
-            <input
-              value={draftConfig.footer.slogan}
-              onChange={(event) =>
-                update((draft) => {
-                  draft.footer.slogan = event.target.value;
-                })
-              }
-            />
-          </label>
-          <label>
-            版权文案（可选）
-            <input
-              value={draftConfig.footer.copyright ?? ""}
-              onChange={(event) =>
-                update((draft) => {
-                  draft.footer.copyright = event.target.value;
-                })
-              }
-            />
-          </label>
-          {(draftConfig.footer.links ?? []).map((link, index) => (
-            <div key={`footer-link-${index}`} className="array-row">
-              <input
-                value={link.label}
-                aria-label={`footer-label-${index}`}
-                placeholder="链接名称"
-                onChange={(event) =>
-                  update((draft) => {
-                    draft.footer.links[index].label = event.target.value;
-                  })
-                }
-              />
-              <input
-                value={link.href}
-                aria-label={`footer-href-${index}`}
-                placeholder="链接地址（如 #narrative / https://...）"
-                onChange={(event) =>
-                  update((draft) => {
-                    draft.footer.links[index].href = event.target.value;
-                  })
-                }
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  update((draft) => {
-                    draft.footer.links.splice(index, 1);
-                  })
-                }
-              >
-                删除
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() =>
-              update((draft) => {
-                draft.footer.links.push({
-                  label: `页脚链接 ${draft.footer.links.length + 1}`,
-                  href: "#"
-                });
-              })
-            }
-          >
-            新增页脚链接
-          </button>
-        </div>
-      </details>
-      ) : null}
-
-      <details className="panel-group">
-        <summary>首屏（Hero）</summary>
-        <div className="panel-group-body">
+        <p className="group-desc">用户进入页面第一眼看到的内容，建议保持简洁明确。</p>
         <label>
           小标题（可选）
           <input
@@ -433,6 +310,8 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
           />
         </label>
 
+        {uiMode === "advanced" ? (
+        <>
         <p className="block-label">数据卡片</p>
         {(draftConfig.hero.stats ?? []).map((stat, index) => (
           <div key={`stat-${index}`} className="array-row">
@@ -535,12 +414,15 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
         >
           新增图片
         </button>
+        </>
+        ) : null}
         </div>
       </details>
 
       <details className="panel-group" open>
         <summary>内容区块</summary>
         <div className="panel-group-body">
+        <p className="group-desc">按展示顺序管理内容。支持拖拽排序，并控制区块是否出现在导航栏。</p>
         {draftConfig.sections.map((section, index) => (
           <details
             key={section.id}
@@ -629,19 +511,34 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
               {renderFieldError(`sections.${index}.title`)}
             </label>
 
-            <label>
-              导航显示文字（可选）
-              <input
-                value={section.navLabel ?? ""}
-                placeholder="不填则使用区块标题"
-                onChange={(event) =>
-                  update((draft) => {
-                    draft.sections[index].navLabel = event.target.value;
-                  })
-                }
-              />
-              {renderFieldError(`sections.${index}.navLabel`)}
-            </label>
+            <div className="section-nav-row">
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={section.includeInNav !== false}
+                  onChange={(event) =>
+                    update((draft) => {
+                      draft.sections[index].includeInNav = event.target.checked;
+                    })
+                  }
+                />
+                加入导航栏
+              </label>
+
+              <label>
+                导航显示文字（可选）
+                <input
+                  value={section.navLabel ?? ""}
+                  placeholder="不填则使用区块标题"
+                  onChange={(event) =>
+                    update((draft) => {
+                      draft.sections[index].navLabel = event.target.value;
+                    })
+                  }
+                />
+                {renderFieldError(`sections.${index}.navLabel`)}
+              </label>
+            </div>
 
             <label>
               区块副标题（可选）
@@ -653,19 +550,6 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
                   })
                 }
               />
-            </label>
-
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={section.includeInNav !== false}
-                onChange={(event) =>
-                  update((draft) => {
-                    draft.sections[index].includeInNav = event.target.checked;
-                  })
-                }
-              />
-              加入导航栏
             </label>
 
             {section.kind === "narrative" ? (
@@ -1064,7 +948,142 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onE
         </div>
       </details>
 
+      <details className="panel-group">
+        <summary>页脚与导出</summary>
+        <div className="panel-group-body">
+        <p className="group-desc">控制页面结尾区域和对外导出内容。</p>
+          <label>
+            页脚标语
+            <input
+              value={draftConfig.footer.slogan}
+              onChange={(event) =>
+                update((draft) => {
+                  draft.footer.slogan = event.target.value;
+                })
+              }
+            />
+          </label>
+          <label>
+            版权文案（可选）
+            <input
+              value={draftConfig.footer.copyright ?? ""}
+              onChange={(event) =>
+                update((draft) => {
+                  draft.footer.copyright = event.target.value;
+                })
+              }
+            />
+          </label>
+          {uiMode === "advanced" ? (
+          <>
+          {(draftConfig.footer.links ?? []).map((link, index) => (
+            <div key={`footer-link-${index}`} className="array-row">
+              <input
+                value={link.label}
+                aria-label={`footer-label-${index}`}
+                placeholder="链接名称"
+                onChange={(event) =>
+                  update((draft) => {
+                    draft.footer.links[index].label = event.target.value;
+                  })
+                }
+              />
+              <input
+                value={link.href}
+                aria-label={`footer-href-${index}`}
+                placeholder="链接地址（如 #narrative / https://...）"
+                onChange={(event) =>
+                  update((draft) => {
+                    draft.footer.links[index].href = event.target.value;
+                  })
+                }
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  update((draft) => {
+                    draft.footer.links.splice(index, 1);
+                  })
+                }
+              >
+                删除
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() =>
+              update((draft) => {
+                draft.footer.links.push({
+                  label: `页脚链接 ${draft.footer.links.length + 1}`,
+                  href: "#"
+                });
+              })
+            }
+          >
+            新增页脚链接
+          </button>
+          </>
+          ) : null}
+        </div>
+      </details>
+
+      {uiMode === "advanced" ? (
+      <details className="panel-group">
+        <summary>高级外观设置</summary>
+        <div className="panel-group-body">
+        <label>
+          背景风格
+          <select
+            value={draftConfig.theme.background}
+            onChange={(event) =>
+              update((draft) => {
+                draft.theme.background = event.target.value as "light" | "dark";
+              })
+            }
+          >
+            <option value="light">浅色</option>
+            <option value="dark">深色</option>
+          </select>
+        </label>
+        <label>
+          主题色（可填 #1f6feb）
+          <input
+            value={draftConfig.theme.accentColor ?? ""}
+            onChange={(event) =>
+              update((draft) => {
+                draft.theme.accentColor = event.target.value;
+              })
+            }
+          />
+        </label>
+        <label>
+          圆角大小
+          <select
+            value={draftConfig.theme.radius ?? "md"}
+            onChange={(event) =>
+              update((draft) => {
+                draft.theme.radius = event.target.value as "sm" | "md" | "lg";
+              })
+            }
+          >
+            <option value="sm">小</option>
+            <option value="md">中</option>
+            <option value="lg">大</option>
+          </select>
+        </label>
+        </div>
+      </details>
+      ) : null}
+
       <p className="panel-hint">提示：若输入后出现红色报错，请检查该字段是否为空或格式是否正确。</p>
+      <button
+        type="button"
+        className={`mobile-fab-save ${hasUnsavedChanges ? "show" : ""}`}
+        onClick={saveDraft}
+      >
+        快速保存
+      </button>
     </section>
   );
 }
