@@ -59,6 +59,40 @@ legend {
   font-size: 13px;
 }
 
+.panel-group {
+  border: 1px solid #d8e2f0;
+  border-radius: 10px;
+  margin: 0 0 10px;
+  background: #fff;
+}
+
+.panel-group > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  list-style: none;
+}
+
+.panel-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-group > summary::before {
+  content: "▸";
+  margin-right: 8px;
+  color: #5e708d;
+}
+
+.panel-group[open] > summary::before {
+  content: "▾";
+}
+
+.panel-group-body {
+  border-top: 1px solid #e6edf7;
+  padding: 10px;
+}
+
 label {
   display: grid;
   gap: 4px;
@@ -142,8 +176,35 @@ button {
 .section-editor {
   border: 1px dashed #c9d7ec;
   border-radius: 8px;
-  padding: 8px;
   margin-bottom: 8px;
+}
+
+.section-editor > summary {
+  cursor: pointer;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #23415f;
+  list-style: none;
+}
+
+.section-editor > summary::-webkit-details-marker {
+  display: none;
+}
+
+.section-editor > summary::before {
+  content: "▸";
+  margin-right: 6px;
+  color: #5e708d;
+}
+
+.section-editor[open] > summary::before {
+  content: "▾";
+}
+
+.section-editor-body {
+  border-top: 1px dashed #c9d7ec;
+  padding: 8px;
 }
 
 .panel-error {

@@ -66,8 +66,9 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
       <p className="panel-hint">面向零代码用户：以下设置都可直接点选或输入，无需写任何 JSON。</p>
       {errorMessage ? <p className="panel-error">{errorMessage}</p> : null}
 
-      <fieldset>
-        <legend>站点信息</legend>
+      <details className="panel-group" open>
+        <summary>站点信息</summary>
+        <div className="panel-group-body">
         <label>
           页面标题
           <input
@@ -104,10 +105,12 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
             <option value="en">English</option>
           </select>
         </label>
-      </fieldset>
+        </div>
+      </details>
 
-      <fieldset>
-        <legend>外观样式</legend>
+      <details className="panel-group">
+        <summary>外观样式</summary>
+        <div className="panel-group-body">
         <label>
           背景风格
           <select
@@ -148,10 +151,12 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
             <option value="lg">大</option>
           </select>
         </label>
-      </fieldset>
+        </div>
+      </details>
 
-      <fieldset>
-        <legend>顶部导航</legend>
+      <details className="panel-group">
+        <summary>顶部导航</summary>
+        <div className="panel-group-body">
         <label>
           品牌名
           <input
@@ -210,10 +215,12 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         >
           新增导航项
         </button>
-      </fieldset>
+        </div>
+      </details>
 
-      <fieldset>
-        <legend>首屏（Hero）</legend>
+      <details className="panel-group">
+        <summary>首屏（Hero）</summary>
+        <div className="panel-group-body">
         <label>
           小标题（可选）
           <input
@@ -350,12 +357,16 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
         >
           新增图片
         </button>
-      </fieldset>
+        </div>
+      </details>
 
-      <fieldset>
-        <legend>内容区块</legend>
+      <details className="panel-group" open>
+        <summary>内容区块</summary>
+        <div className="panel-group-body">
         {pageConfig.sections.map((section, index) => (
-          <article key={section.id} className="section-editor">
+          <details key={section.id} className="section-editor">
+            <summary>{`${section.title || "未命名区块"} · ${SECTION_KIND_LABELS[section.kind]}`}</summary>
+            <div className="section-editor-body">
             <div className="array-row">
               <input
                 value={section.id}
@@ -786,7 +797,8 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
                 </button>
               </>
             ) : null}
-          </article>
+            </div>
+          </details>
         ))}
 
         <div className="array-row">
@@ -809,7 +821,8 @@ export function Panel({ pageConfig, setPageConfig }: PanelProps) {
             新增区块
           </button>
         </div>
-      </fieldset>
+        </div>
+      </details>
 
       <p className="panel-hint">提示：若输入后出现红色报错，请检查该字段是否为空或格式是否正确。</p>
     </section>
