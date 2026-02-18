@@ -26,6 +26,7 @@ body {
   padding: 12px;
   height: 100%;
   overflow: hidden;
+  min-height: 0;
 }
 
 .editor-shell,
@@ -34,15 +35,15 @@ body {
   border-radius: 14px;
   background: #fff;
   padding: 12px;
+  min-height: 0;
+  height: calc(100vh - 24px);
 }
 
 .editor-shell {
-  max-height: calc(100vh - 24px);
   overflow: auto;
 }
 
 .preview-shell {
-  max-height: calc(100vh - 24px);
   overflow: auto;
 }
 
@@ -463,16 +464,19 @@ button {
     grid-template-columns: 1fr;
     height: auto;
     overflow: visible;
+    min-height: auto;
   }
 
   .editor-shell {
-    max-height: none;
+    height: auto;
     overflow: visible;
+    min-height: auto;
   }
 
   .preview-shell {
-    max-height: none;
+    height: auto;
     overflow: visible;
+    min-height: auto;
   }
 
   .render-hero,
