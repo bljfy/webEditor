@@ -15,6 +15,7 @@ describe("export html", () => {
     expect(html).toContain("window.addEventListener(\"scroll\", onScroll");
     expect(html).toContain("IntersectionObserver");
     expect(html).toContain("document.querySelectorAll(\".media-open-trigger\")");
+    expect(html).not.toContain("modal.innerHTML");
   });
 
   it("keeps renderer markup consistent between preview and export", () => {
@@ -23,6 +24,16 @@ describe("export html", () => {
     const html = createExportHtml(config);
 
     expect(html).toContain(previewMarkup);
+  });
+
+
+  it("sanitizes potentially dangerous footer links", () => {
+    const config = createDefaultPageConfig();
+    config.footer.links[0].href = "javascript:alert('xss')";
+
+    const markup = renderRendererMarkup(config);
+    expect(markup).toContain('href="#"');
+    expect(markup).not.toContain("javascript:alert");
   });
 
   it("does not force section visibility in exported initial markup", () => {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PageConfig } from "../schema/pageConfig";
 import { deriveNavItemsFromSections } from "../schema/nav";
 import { resolveScrollablePreviewShell } from "./scrollContext";
+import { sanitizeImageSrc, sanitizeLinkHref } from "../security/urlSanitizer";
 
 type RendererProps = {
   config: PageConfig;
@@ -16,7 +17,9 @@ function collectViewerImages(config: PageConfig): ViewerImage[] {
   const list: ViewerImage[] = [];
   const push = (src?: string, title?: string) => {
     if (!src || !src.trim()) return;
-    list.push({ src, title: title?.trim() || "未命名图片" });
+    const safeSrc = sanitizeImageSrc(src);
+    if (!safeSrc) return;
+    list.push({ src: safeSrc, title: title?.trim() || "未命名图片" });
   };
 
   config.hero.gallery.forEach((item) => push(item.image.src, item.image.title));
@@ -69,7 +72,8 @@ function MediaCard({
   placeholder?: boolean;
   onOpen: (image: ViewerImage) => void;
 }) {
-  const hasImage = src && src.trim().length > 0;
+  const safeSrc = sanitizeImageSrc(src);
+  const hasImage = safeSrc.length > 0;
   const canOpen = hasImage && !placeholder;
 
   return (
@@ -80,10 +84,10 @@ function MediaCard({
         <button
           type="button"
           className="media-open-trigger"
-          onClick={() => onOpen({ src: src ?? "", title: title || "未命名图片" })}
+          onClick={() => onOpen({ src: safeSrc, title: title || "未命名图片" })}
           aria-label={`查看图片：${title || "未命名图片"}`}
         >
-          <img src={src} alt={title || "image"} loading="lazy" />
+          <img src={safeSrc} alt={title || "image"} loading="lazy" />
         </button>
       )}
       <div className="media-body">
@@ -386,10 +390,10 @@ export function Renderer({ config }: RendererProps) {
               <button
                 type="button"
                 className="media-open-trigger"
-                onClick={() => openImage({ src: item.image.src, title: item.image.title || "未命名图片" })}
+                onClick={() => openImage({ src: sanitizeImageSrc(item.image.src), title: item.image.title || "未命名图片" })}
                 aria-label={`查看图片：${item.image.title || "未命名图片"}`}
               >
-                <img src={item.image.src} alt={item.image.title || "hero-image"} />
+                <img src={sanitizeImageSrc(item.image.src)} alt={item.image.title || "hero-image"} />
               </button>
             </div>
           ))}
@@ -417,7 +421,7 @@ export function Renderer({ config }: RendererProps) {
         </div>
         <div className="render-footer-links">
           {config.footer.links.map((item, index) => (
-            <a key={`footer-link-${index}`} href={item.href}>
+            <a key={`footer-link-${index}`} href={sanitizeLinkHref(item.href)} rel="noreferrer">
               {item.label}
             </a>
           ))}
@@ -431,7 +435,7 @@ export function Renderer({ config }: RendererProps) {
       {activeImage ? (
         <div className="image-modal" onClick={closeImage}>
           <div className="image-modal-content" onClick={(event) => event.stopPropagation()}>
-            <img src={activeImage.src} alt={activeImage.title} />
+            <img src={sanitizeImageSrc(activeImage.src)} alt={activeImage.title} />
             <div className="image-modal-bar">
               <div className="image-modal-nav">
                 <button type="button" onClick={() => shiftImage(-1)} aria-label="上一张">

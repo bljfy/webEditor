@@ -12,6 +12,31 @@ const EXPORT_INTERACTION_SCRIPT = `
   const sections = Array.from(document.querySelectorAll(".render-section"));
   const getIdFromHref = (href) => (href && href.startsWith("#") ? href.slice(1) : "");
 
+  const hasUnsafeChars = (value) => {
+    for (let i = 0; i < value.length; i += 1) {
+      const code = value.charCodeAt(i);
+      if (code <= 31 || code === 127) return true;
+    }
+    return /\\s/.test(value);
+  };
+
+  const sanitizeImageSrc = (raw) => {
+    if (!raw) return "";
+    const value = String(raw).trim();
+    if (!value || hasUnsafeChars(value)) return "";
+    if (value.startsWith("/") || value.startsWith("./") || value.startsWith("../") || value.startsWith("#")) {
+      return value;
+    }
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)) return "";
+    try {
+      const protocol = new URL(value).protocol.toLowerCase();
+      if (["http:", "https:", "blob:", "data:"].includes(protocol)) return value;
+    } catch {
+      return "";
+    }
+    return "";
+  };
+
   const setActiveNav = (id) => {
     navLinks.forEach((link) => {
       const linkId = getIdFromHref(link.getAttribute("href") || "");
@@ -68,7 +93,7 @@ const EXPORT_INTERACTION_SCRIPT = `
   const collectViewerImages = () => {
     return Array.from(document.querySelectorAll(".media-open-trigger img"))
       .map((img) => ({
-        src: img.getAttribute("src") || "",
+        src: sanitizeImageSrc(img.getAttribute("src") || ""),
         title: img.getAttribute("alt") || "图片"
       }))
       .filter((item) => item.src);
@@ -90,30 +115,52 @@ const EXPORT_INTERACTION_SCRIPT = `
     activeImageIndex = safeIndex;
     if (!current.src) return;
     removeModal();
+
     const modal = document.createElement("div");
     modal.className = "image-modal";
-    modal.innerHTML = \`
-      <div class="image-modal-content">
-        <img src="\${current.src}" alt="\${current.title || "图片"}" />
-        <div class="image-modal-bar">
-          <div class="image-modal-nav">
-            <button type="button" data-modal-prev>上一张</button>
-            <button type="button" data-modal-next>下一张</button>
-          </div>
-          <span>\${current.title || "图片"}</span>
-          <button type="button" data-modal-close>关闭</button>
-        </div>
-      </div>
-    \`;
+
+    const content = document.createElement("div");
+    content.className = "image-modal-content";
+
+    const image = document.createElement("img");
+    image.setAttribute("src", current.src);
+    image.setAttribute("alt", current.title || "图片");
+
+    const bar = document.createElement("div");
+    bar.className = "image-modal-bar";
+
+    const nav = document.createElement("div");
+    nav.className = "image-modal-nav";
+
+    const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.textContent = "上一张";
+
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.textContent = "下一张";
+
+    const title = document.createElement("span");
+    title.textContent = current.title || "图片";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.textContent = "关闭";
+
+    nav.appendChild(prevBtn);
+    nav.appendChild(nextBtn);
+    bar.appendChild(nav);
+    bar.appendChild(title);
+    bar.appendChild(closeBtn);
+    content.appendChild(image);
+    content.appendChild(bar);
+    modal.appendChild(content);
+
     modal.addEventListener("click", () => removeModal());
-    const content = modal.querySelector(".image-modal-content");
-    if (content) content.addEventListener("click", (event) => event.stopPropagation());
-    const closeBtn = modal.querySelector("[data-modal-close]");
-    if (closeBtn) closeBtn.addEventListener("click", () => removeModal());
-    const prevBtn = modal.querySelector("[data-modal-prev]");
-    if (prevBtn) prevBtn.addEventListener("click", () => openModalByIndex(activeImageIndex - 1));
-    const nextBtn = modal.querySelector("[data-modal-next]");
-    if (nextBtn) nextBtn.addEventListener("click", () => openModalByIndex(activeImageIndex + 1));
+    content.addEventListener("click", (event) => event.stopPropagation());
+    closeBtn.addEventListener("click", () => removeModal());
+    prevBtn.addEventListener("click", () => openModalByIndex(activeImageIndex - 1));
+    nextBtn.addEventListener("click", () => openModalByIndex(activeImageIndex + 1));
     document.body.appendChild(modal);
   };
 
