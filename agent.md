@@ -69,4 +69,5 @@
 - 任何实现与 `docx/` 子文档冲突时，必须以子文档规范为准并修改实现。
 - 新增 SectionKind 时，必须同步更新 Schema 文档和对应 Renderer 说明。
 - 禁止在 Renderer 中引入编辑态分支（如 `isEditing`）。
+- 每次代码改动后必须执行对应测试（至少 `npm run lint` 与 `npm run test`，必要时执行 `npm run build`）并修复失败项。
 - 每次修改必须提交 commit，禁止长期保留未提交变更。
