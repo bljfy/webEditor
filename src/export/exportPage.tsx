@@ -29,6 +29,30 @@ const EXPORT_INTERACTION_SCRIPT = `
     if (currentId) setActiveNav(currentId);
   };
 
+  const revealAllSections = () => {
+    sections.forEach((section) => section.classList.add("visible"));
+  };
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "0px 0px -6% 0px",
+        threshold: [0.05, 0.2, 0.35, 0.55, 0.75]
+      }
+    );
+    sections.forEach((section) => observer.observe(section));
+  } else {
+    revealAllSections();
+  }
+
   navLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       const id = getIdFromHref(link.getAttribute("href") || "");
@@ -126,10 +150,7 @@ function normalizeFileName(title: string): string {
 }
 
 export function renderRendererMarkup(config: PageConfig): string {
-  const markup = renderToStaticMarkup(<Renderer config={config} />);
-  return markup
-    .replaceAll("section-anim ", "section-anim visible ")
-    .replaceAll("section-anim\"", "section-anim visible\"");
+  return renderToStaticMarkup(<Renderer config={config} />);
 }
 
 export function createExportHtml(config: PageConfig): string {

@@ -176,7 +176,7 @@ function renderSection(section: PageConfig["sections"][number], onOpenImage: (im
 }
 
 function sectionVisibleClass(isClient: boolean, visibleMap: Record<string, boolean>, id: string) {
-  if (!isClient) return "visible";
+  if (!isClient) return "";
   return visibleMap[id] ? "visible" : "";
 }
 
@@ -218,13 +218,16 @@ export function Renderer({ config }: RendererProps) {
   }, [isClient]);
 
   useEffect(() => {
-    if (!rootRef.current || !isClient || typeof IntersectionObserver === "undefined") {
-      return;
-    }
+    if (!rootRef.current || !isClient) return;
 
     const rootElement = rootRef.current;
     const sections = Array.from(rootElement.querySelectorAll<HTMLElement>(".render-section"));
     if (!sections.length) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setVisibleSections(() => Object.fromEntries(sections.map((section) => [section.id, true])));
+      return;
+    }
 
     const scrollContainer = rootElement.closest(".preview-shell") as HTMLElement | null;
 

@@ -13,6 +13,7 @@ describe("export html", () => {
     expect(html).toContain("render-root");
     expect(html).toContain("media-open-trigger");
     expect(html).toContain("window.addEventListener(\"scroll\", onScroll");
+    expect(html).toContain("IntersectionObserver");
     expect(html).toContain("document.querySelectorAll(\".media-open-trigger\")");
   });
 
@@ -22,5 +23,11 @@ describe("export html", () => {
     const html = createExportHtml(config);
 
     expect(html).toContain(previewMarkup);
+  });
+
+  it("does not force section visibility in exported initial markup", () => {
+    const config = createDefaultPageConfig();
+    const markup = renderRendererMarkup(config);
+    expect(markup.includes("section-anim visible")).toBe(false);
   });
 });
