@@ -9,6 +9,7 @@ import {
 type PanelProps = {
   pageConfig: PageConfig;
   setPageConfig: (nextConfig: PageConfig) => void;
+  onUnsavedChange?: (hasUnsavedChanges: boolean) => void;
   onExportHtml: () => void;
 };
 
@@ -33,29 +34,52 @@ function joinTags(tags?: string[]) {
   return tags?.join(", ") ?? "";
 }
 
-export function Panel({ pageConfig, setPageConfig, onExportHtml }: PanelProps) {
+function isSameConfig(a: PageConfig, b: PageConfig) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function moveArrayItem<T>(list: T[], fromIndex: number, toIndex: number) {
+  if (fromIndex === toIndex) return list;
+  const next = [...list];
+  const [removed] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, removed);
+  return next;
+}
+
+export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml }: PanelProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [newSectionKind, setNewSectionKind] = useState<SectionKind>("narrative");
   const [draftConfig, setDraftConfig] = useState<PageConfig>(() => structuredClone(pageConfig));
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [historyPast, setHistoryPast] = useState<PageConfig[]>([]);
+  const [historyFuture, setHistoryFuture] = useState<PageConfig[]>([]);
+  const [draggingSectionIndex, setDraggingSectionIndex] = useState<number | null>(null);
+  const [dragOverSectionIndex, setDragOverSectionIndex] = useState<number | null>(null);
 
   const sectionKinds = useMemo<SectionKind[]>(
     () => ["narrative", "strip-gallery", "model-stage", "atlas-grid", "masonry-gallery"],
     []
   );
 
+  const hasUnsavedChanges = useMemo(() => !isSameConfig(draftConfig, pageConfig), [draftConfig, pageConfig]);
+
   useEffect(() => {
     setDraftConfig(structuredClone(pageConfig));
-    setHasUnsavedChanges(false);
+    setHistoryPast([]);
+    setHistoryFuture([]);
   }, [pageConfig]);
+
+  useEffect(() => {
+    onUnsavedChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onUnsavedChange]);
 
   function saveDraft() {
     try {
       const parsed = parsePageConfig(draftConfig);
       setPageConfig(parsed);
       setDraftConfig(structuredClone(parsed));
-      setHasUnsavedChanges(false);
+      setHistoryPast([]);
+      setHistoryFuture([]);
       setErrorMessage("");
       setSaveMessage("已保存，预览已更新。");
     } catch (error) {
@@ -68,20 +92,77 @@ export function Panel({ pageConfig, setPageConfig, onExportHtml }: PanelProps) {
     setDraftConfig((prev) => {
       const next = structuredClone(prev);
       mutator(next);
+      setHistoryPast((past) => [...past.slice(-49), prev]);
+      setHistoryFuture([]);
       return next;
     });
-    setHasUnsavedChanges(true);
     setSaveMessage("");
     if (errorMessage) {
       setErrorMessage("");
     }
   }
 
+  function undoDraft() {
+    if (!historyPast.length) return;
+    const previous = historyPast[historyPast.length - 1];
+    setHistoryPast((past) => past.slice(0, -1));
+    setHistoryFuture((future) => [structuredClone(draftConfig), ...future.slice(0, 49)]);
+    setDraftConfig(structuredClone(previous));
+    setSaveMessage("");
+    setErrorMessage("");
+  }
+
+  function redoDraft() {
+    if (!historyFuture.length) return;
+    const [next, ...rest] = historyFuture;
+    setHistoryFuture(rest);
+    setHistoryPast((past) => [...past.slice(-49), structuredClone(draftConfig)]);
+    setDraftConfig(structuredClone(next));
+    setSaveMessage("");
+    setErrorMessage("");
+  }
+
+  function reorderSection(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return;
+    update((draft) => {
+      draft.sections = moveArrayItem(draft.sections, fromIndex, toIndex);
+    });
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName.toLowerCase();
+      if (target?.isContentEditable || tagName === "input" || tagName === "textarea") return;
+
+      if (event.key.toLowerCase() === "z" && !event.shiftKey) {
+        event.preventDefault();
+        undoDraft();
+        return;
+      }
+
+      if (event.key.toLowerCase() === "y" || (event.key.toLowerCase() === "z" && event.shiftKey)) {
+        event.preventDefault();
+        redoDraft();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   return (
     <section className="editor-shell">
       <div className="panel-title-row">
         <h2>编辑面板</h2>
         <div className="save-actions">
+          <button type="button" onClick={undoDraft} disabled={!historyPast.length}>
+            撤销
+          </button>
+          <button type="button" onClick={redoDraft} disabled={!historyFuture.length}>
+            重做
+          </button>
           <button type="button" onClick={saveDraft} disabled={!hasUnsavedChanges}>
             保存更改
           </button>
@@ -94,6 +175,7 @@ export function Panel({ pageConfig, setPageConfig, onExportHtml }: PanelProps) {
       <p className="panel-hint">
         面向零代码用户：可先自由编辑，再点击“保存更改”统一校验并更新预览。
       </p>
+      <p className="panel-hint">支持撤销/重做（Ctrl/Cmd + Z、Ctrl/Cmd + Y），区块支持拖拽排序。</p>
       {errorMessage ? <p className="panel-error">{errorMessage}</p> : null}
       {saveMessage ? <p className="panel-success">{saveMessage}</p> : null}
 
@@ -470,8 +552,49 @@ export function Panel({ pageConfig, setPageConfig, onExportHtml }: PanelProps) {
         <summary>内容区块</summary>
         <div className="panel-group-body">
         {draftConfig.sections.map((section, index) => (
-          <details key={section.id} className="section-editor">
-            <summary>{`${section.title || "未命名区块"} · ${SECTION_KIND_LABELS[section.kind]}`}</summary>
+          <details
+            key={section.id}
+            className={`section-editor ${dragOverSectionIndex === index ? "drag-over" : ""}`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (dragOverSectionIndex !== index) {
+                setDragOverSectionIndex(index);
+              }
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              if (draggingSectionIndex !== null) {
+                reorderSection(draggingSectionIndex, index);
+              }
+              setDraggingSectionIndex(null);
+              setDragOverSectionIndex(null);
+            }}
+            onDragLeave={(event) => {
+              if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+              setDragOverSectionIndex((prev) => (prev === index ? null : prev));
+            }}
+          >
+            <summary>
+              <span className="section-title">{`${section.title || "未命名区块"} · ${SECTION_KIND_LABELS[section.kind]}`}</span>
+              <button
+                type="button"
+                className="drag-handle"
+                draggable
+                onClick={(event) => event.preventDefault()}
+                onDragStart={() => {
+                  setDraggingSectionIndex(index);
+                  setDragOverSectionIndex(index);
+                }}
+                onDragEnd={() => {
+                  setDraggingSectionIndex(null);
+                  setDragOverSectionIndex(null);
+                }}
+                aria-label={`拖拽排序区块：${section.title || `第 ${index + 1} 个区块`}`}
+                title="拖拽排序"
+              >
+                拖拽排序
+              </button>
+            </summary>
             <div className="section-editor-body">
             <div className="array-row">
               <input

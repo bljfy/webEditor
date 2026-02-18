@@ -214,6 +214,10 @@ button {
   font-weight: 600;
   color: #23415f;
   list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .section-editor > summary::-webkit-details-marker {
@@ -228,6 +232,31 @@ button {
 
 .section-editor[open] > summary::before {
   content: "▾";
+}
+
+.section-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drag-handle {
+  border: 1px dashed #9ab3d3;
+  background: #f5f9ff;
+  color: #35516f;
+  padding: 3px 8px;
+  border-radius: 999px;
+  cursor: grab;
+  font-size: 12px;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.section-editor.drag-over {
+  border-color: #1f6feb;
+  background: #f3f8ff;
 }
 
 .section-editor-body {

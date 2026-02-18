@@ -22,4 +22,19 @@ describe("App", () => {
 
     expect(screen.getByText("新品牌")).toBeInTheDocument();
   });
+
+  it("supports undo and redo for draft edits", () => {
+    render(<App />);
+
+    const brandInput = screen.getByLabelText("品牌名") as HTMLInputElement;
+    fireEvent.change(brandInput, { target: { value: "第一次修改" } });
+    fireEvent.change(brandInput, { target: { value: "第二次修改" } });
+    expect(brandInput.value).toBe("第二次修改");
+
+    fireEvent.click(screen.getByRole("button", { name: "撤销" }));
+    expect(brandInput.value).toBe("第一次修改");
+
+    fireEvent.click(screen.getByRole("button", { name: "重做" }));
+    expect(brandInput.value).toBe("第二次修改");
+  });
 });
