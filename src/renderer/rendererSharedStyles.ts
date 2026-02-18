@@ -396,36 +396,47 @@ export const RENDERER_SHARED_CSS = `
 .image-modal {
   position: fixed;
   inset: 0;
-  background: rgba(3, 5, 8, 0.92);
-  z-index: 100;
+  background:
+    radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 42%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 40%),
+    rgba(7, 12, 20, 0.84);
+  backdrop-filter: blur(10px) saturate(115%);
+  z-index: 120;
   display: grid;
   place-items: center;
   padding: 20px;
 }
 
 .image-modal-content {
-  width: min(1100px, 96vw);
-  border-radius: 14px;
+  width: min(1120px, 96vw);
+  border-radius: 18px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
-  background: #000;
+  border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--line));
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--panel) 94%, transparent), color-mix(in srgb, var(--accent) 9%, var(--panel)));
+  box-shadow:
+    0 24px 80px color-mix(in srgb, #000 42%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent) inset;
 }
 
 .image-modal img {
   width: 100%;
-  max-height: 82vh;
+  max-height: min(76vh, 900px);
   object-fit: contain;
   display: block;
+  background: color-mix(in srgb, var(--bg) 86%, #02060b);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 76%, var(--accent) 24%);
 }
 
 .image-modal-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: rgba(15, 22, 30, 0.95);
-  color: #ecf4ff;
+  gap: 12px;
+  padding: 12px 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--panel) 90%, var(--accent) 10%), color-mix(in srgb, var(--panel) 90%, var(--accent-2) 10%));
+  color: var(--ink);
 }
 
 .image-modal-nav {
@@ -434,12 +445,28 @@ export const RENDERER_SHARED_CSS = `
 }
 
 .image-modal-bar button {
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
-  background: rgba(24, 38, 53, 0.8);
-  color: inherit;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, var(--accent) 28%);
+  background: color-mix(in srgb, var(--panel) 84%, transparent);
+  color: var(--ink);
   border-radius: 999px;
   padding: 6px 12px;
   cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.image-modal-bar button:hover {
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent) inset;
+}
+
+.image-modal-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .render-footer {
@@ -654,10 +681,17 @@ export const RENDERER_SHARED_CSS = `
   .image-modal-bar {
     flex-direction: column;
     align-items: stretch;
+    padding: 10px;
+    gap: 8px;
   }
 
   .image-modal-nav {
     width: 100%;
+  }
+
+  .image-modal-title {
+    text-align: left;
+    white-space: normal;
   }
 
   .image-modal-nav button,

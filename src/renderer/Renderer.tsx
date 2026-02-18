@@ -441,7 +441,7 @@ export function Renderer({ config }: RendererProps) {
                   下一张
                 </button>
               </div>
-              <span>{activeImage.title}</span>
+              <span className="image-modal-title">{activeImage.title}</span>
               <button type="button" onClick={closeImage}>
                 关闭
               </button>
