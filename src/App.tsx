@@ -10,6 +10,7 @@ export function App() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<string>("");
   const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
+  const [uiTheme, setUiTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -22,8 +23,35 @@ export function App() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("editor_ui_theme");
+    if (savedTheme === "light" || savedTheme === "dark") {
+      setUiTheme(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("editor_ui_theme", uiTheme);
+    document.body.dataset.appTheme = uiTheme;
+  }, [uiTheme]);
+
   return (
-    <main className="workspace">
+    <main className={`workspace workspace-theme-${uiTheme}`}>
+      <header className="workspace-header">
+        <div className="workspace-header-brand">
+          <strong>WebEditor</strong>
+          <span>零代码可视化建站编辑器</span>
+        </div>
+        <div className="workspace-header-actions">
+          <span>统一主题</span>
+          <button type="button" onClick={() => setUiTheme("light")} aria-pressed={uiTheme === "light"}>
+            亮色
+          </button>
+          <button type="button" onClick={() => setUiTheme("dark")} aria-pressed={uiTheme === "dark"}>
+            暗色
+          </button>
+        </div>
+      </header>
       <div className="workspace-mobile-tabs">
         <button type="button" className={mobileView === "editor" ? "active" : ""} onClick={() => setMobileView("editor")}>
           编辑

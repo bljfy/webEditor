@@ -5,9 +5,19 @@ describe("App", () => {
   it("renders editor and preview shells", () => {
     render(<App />);
 
+    expect(screen.getByText("WebEditor")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "编辑面板" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Preview" })).toBeInTheDocument();
     expect(screen.getByText("WebEditor · 面向零代码用户的可视化建站编辑器")).toBeInTheDocument();
+  });
+
+  it("supports unified theme switch and persists selection", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "暗色" }));
+
+    expect(screen.getByRole("button", { name: "暗色" })).toHaveAttribute("aria-pressed", "true");
+    expect(window.localStorage.getItem("editor_ui_theme")).toBe("dark");
   });
 
   it("updates preview only after clicking save", () => {
