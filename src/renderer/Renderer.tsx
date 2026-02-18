@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PageConfig } from "../schema/pageConfig";
+import { deriveNavItemsFromSections } from "../schema/nav";
 
 type RendererProps = {
   config: PageConfig;
@@ -8,11 +9,6 @@ type RendererProps = {
 type ViewerImage = {
   src: string;
   title: string;
-};
-
-type NavItem = {
-  id: string;
-  label: string;
 };
 
 function collectViewerImages(config: PageConfig): ViewerImage[] {
@@ -57,22 +53,6 @@ function joinTags(tags?: string[]) {
 
 function getCurrentYear() {
   return new Date().getFullYear();
-}
-
-function deriveNavItems(config: PageConfig): NavItem[] {
-  const normalizeSectionTitle = (title: string, navLabel: string | undefined, index: number) => {
-    const source = navLabel?.trim() ? navLabel : title;
-    const clean = source.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
-    const base = clean || `区块 ${index + 1}`;
-    return `${String(index + 1).padStart(2, "0")} ${base}`;
-  };
-
-  return config.sections
-    .filter((section) => section.includeInNav !== false)
-    .map((section, index) => ({
-      id: section.id,
-      label: normalizeSectionTitle(section.title ?? "", section.navLabel, index)
-    }));
 }
 
 function MediaCard({
@@ -207,7 +187,7 @@ function sectionVisibleClass(isClient: boolean, visibleMap: Record<string, boole
 
 export function Renderer({ config }: RendererProps) {
   const isClient = typeof window !== "undefined";
-  const navItems = useMemo(() => deriveNavItems(config), [config]);
+  const navItems = useMemo(() => deriveNavItemsFromSections(config.sections), [config.sections]);
   const firstSectionId = useMemo(
     () => navItems[0]?.id ?? config.sections[0]?.id ?? "",
     [config.sections, navItems]

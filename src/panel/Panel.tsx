@@ -3,13 +3,15 @@ import {
   type PageConfig,
   type SectionKind,
   createDefaultSection,
-  parsePageConfig
+  validatePageConfig
 } from "../schema/pageConfig";
+import { syncNavFromSections } from "../schema/nav";
 
 type PanelProps = {
   pageConfig: PageConfig;
   setPageConfig: (nextConfig: PageConfig) => void;
   onUnsavedChange?: (hasUnsavedChanges: boolean) => void;
+  onSaved?: (savedAt: string) => void;
   onExportHtml: () => void;
 };
 
@@ -46,32 +48,11 @@ function moveArrayItem<T>(list: T[], fromIndex: number, toIndex: number) {
   return next;
 }
 
-function syncNavFromSections(config: PageConfig): PageConfig {
-  const normalizeSectionTitle = (title: string, navLabel: string | undefined, index: number) => {
-    const source = navLabel?.trim() ? navLabel : title;
-    const clean = source.replace(/^\s*\d+\s*[.、-]?\s*/, "").trim();
-    const base = clean || `区块 ${index + 1}`;
-    return `${String(index + 1).padStart(2, "0")} ${base}`;
-  };
-
-  const next = structuredClone(config);
-  next.sections = next.sections.map((section, index) => ({
-    ...section,
-    id: section.id?.trim() || `section-${index + 1}`
-  }));
-
-  next.nav.items = next.sections
-    .filter((section) => section.includeInNav !== false)
-    .map((section, index) => ({
-      id: section.id || `section-${index + 1}`,
-      label: normalizeSectionTitle(section.title ?? "", section.navLabel, index)
-    }));
-  return next;
-}
-
-export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml }: PanelProps) {
+export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onSaved, onExportHtml }: PanelProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [uiMode, setUiMode] = useState<"simple" | "advanced">("simple");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [newSectionKind, setNewSectionKind] = useState<SectionKind>("narrative");
   const [draftConfig, setDraftConfig] = useState<PageConfig>(() => structuredClone(pageConfig));
   const [historyPast, setHistoryPast] = useState<PageConfig[]>([]);
@@ -85,6 +66,8 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
   );
 
   const hasUnsavedChanges = useMemo(() => !isSameConfig(draftConfig, pageConfig), [draftConfig, pageConfig]);
+  const statusText = errorMessage ? "校验失败" : hasUnsavedChanges ? "未保存" : "已保存";
+  const statusClass = errorMessage ? "status-error" : hasUnsavedChanges ? "status-dirty" : "status-clean";
 
   useEffect(() => {
     setDraftConfig(syncNavFromSections(pageConfig));
@@ -96,19 +79,40 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
     onUnsavedChange?.(hasUnsavedChanges);
   }, [hasUnsavedChanges, onUnsavedChange]);
 
-  function saveDraft() {
-    try {
-      const parsed = parsePageConfig(syncNavFromSections(draftConfig));
-      setPageConfig(parsed);
-      setDraftConfig(structuredClone(parsed));
-      setHistoryPast([]);
-      setHistoryFuture([]);
-      setErrorMessage("");
-      setSaveMessage("已保存，预览已更新。");
-    } catch (error) {
-      setSaveMessage("");
-      setErrorMessage(error instanceof Error ? error.message : "配置校验失败");
+  useEffect(() => {
+    const saved = window.localStorage.getItem("editor_ui_mode");
+    if (saved === "simple" || saved === "advanced") {
+      setUiMode(saved);
     }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("editor_ui_mode", uiMode);
+  }, [uiMode]);
+
+  function saveDraft() {
+    const report = validatePageConfig(syncNavFromSections(draftConfig));
+    if (!report.ok) {
+      const nextFieldErrors: Record<string, string> = {};
+      report.errors.forEach((item) => {
+        if (!nextFieldErrors[item.path]) {
+          nextFieldErrors[item.path] = item.message;
+        }
+      });
+      setFieldErrors(nextFieldErrors);
+      setSaveMessage("");
+      setErrorMessage(report.message);
+      return;
+    }
+
+    setPageConfig(report.data);
+    setDraftConfig(structuredClone(report.data));
+    setHistoryPast([]);
+    setHistoryFuture([]);
+    setFieldErrors({});
+    setErrorMessage("");
+    setSaveMessage("已保存，预览已更新。");
+    onSaved?.(new Date().toISOString());
   }
 
   function update(mutator: (draft: PageConfig) => void) {
@@ -121,6 +125,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
       return synced;
     });
     setSaveMessage("");
+    setFieldErrors({});
     if (errorMessage) {
       setErrorMessage("");
     }
@@ -133,6 +138,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
     setHistoryFuture((future) => [structuredClone(draftConfig), ...future.slice(0, 49)]);
     setDraftConfig(structuredClone(previous));
     setSaveMessage("");
+    setFieldErrors({});
     setErrorMessage("");
   }
 
@@ -143,6 +149,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
     setHistoryPast((past) => [...past.slice(-49), structuredClone(draftConfig)]);
     setDraftConfig(structuredClone(next));
     setSaveMessage("");
+    setFieldErrors({});
     setErrorMessage("");
   }
 
@@ -176,11 +183,26 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
     return () => window.removeEventListener("keydown", onKeyDown);
   });
 
+  function renderFieldError(path: string) {
+    const message = fieldErrors[path];
+    if (!message) return null;
+    return <p className="field-error">{message}</p>;
+  }
+
   return (
     <section className="editor-shell">
       <div className="panel-title-row">
-        <h2>编辑面板</h2>
+        <div className="panel-title-stack">
+          <h2>编辑面板</h2>
+          <span className={`panel-status-badge ${statusClass}`}>{statusText}</span>
+        </div>
         <div className="save-actions">
+          <button type="button" onClick={() => setUiMode("simple")} disabled={uiMode === "simple"}>
+            简洁模式
+          </button>
+          <button type="button" onClick={() => setUiMode("advanced")} disabled={uiMode === "advanced"}>
+            高级模式
+          </button>
           <button type="button" onClick={undoDraft} disabled={!historyPast.length}>
             撤销
           </button>
@@ -199,6 +221,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
       <p className="panel-hint">
         面向零代码用户：可先自由编辑，再点击“保存更改”统一校验并更新预览。
       </p>
+      <p className="panel-hint">{uiMode === "simple" ? "当前为简洁模式：仅展示高频配置。" : "当前为高级模式：展示全部可编辑项。"}</p>
       <p className="panel-hint">导航栏由内容区块自动生成，可按区块勾选是否加入，并可单独设置导航显示文字。</p>
       <p className="panel-hint">支持撤销/重做（Ctrl/Cmd + Z、Ctrl/Cmd + Y），区块支持拖拽排序。</p>
       {errorMessage ? <p className="panel-error">{errorMessage}</p> : null}
@@ -217,6 +240,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
               })
             }
           />
+          {renderFieldError("meta.title")}
         </label>
         <label>
           页面描述
@@ -246,6 +270,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
         </div>
       </details>
 
+      {uiMode === "advanced" ? (
       <details className="panel-group">
         <summary>外观样式</summary>
         <div className="panel-group-body">
@@ -291,7 +316,9 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
         </label>
         </div>
       </details>
+      ) : null}
 
+      {uiMode === "advanced" ? (
       <details className="panel-group">
         <summary>页脚设置</summary>
         <div className="panel-group-body">
@@ -366,6 +393,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
           </button>
         </div>
       </details>
+      ) : null}
 
       <details className="panel-group">
         <summary>首屏（Hero）</summary>
@@ -391,6 +419,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
               })
             }
           />
+          {renderFieldError("hero.title")}
         </label>
         <label>
           导语
@@ -574,6 +603,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
                 ))}
               </select>
               <div className="inline-hint">区块锚点 ID 由系统自动维护，普通模式无需设置。</div>
+              {uiMode === "advanced" ? <div className="inline-hint">锚点 ID：{section.id}</div> : null}
               <button
                 type="button"
                 onClick={() =>
@@ -596,6 +626,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
                   })
                 }
               />
+              {renderFieldError(`sections.${index}.title`)}
             </label>
 
             <label>
@@ -609,6 +640,7 @@ export function Panel({ pageConfig, setPageConfig, onUnsavedChange, onExportHtml
                   })
                 }
               />
+              {renderFieldError(`sections.${index}.navLabel`)}
             </label>
 
             <label>

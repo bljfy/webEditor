@@ -29,6 +29,14 @@ body {
   min-height: 0;
 }
 
+.workspace-mobile-tabs {
+  display: none;
+}
+
+.workspace-pane {
+  min-height: 0;
+}
+
 .editor-shell,
 .preview-shell {
   border: 1px solid #d8e2f0;
@@ -62,6 +70,36 @@ body {
 .panel-title-row h2 {
   margin: 0;
   font-size: 1rem;
+}
+
+.panel-title-stack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.panel-status-badge.status-clean {
+  background: #e8f8ef;
+  color: #0f6a3a;
+}
+
+.panel-status-badge.status-dirty {
+  background: #fff4df;
+  color: #8b5a00;
+}
+
+.panel-status-badge.status-error {
+  background: #ffe8eb;
+  color: #b0172a;
 }
 
 .save-actions {
@@ -282,6 +320,25 @@ button {
   font-size: 12px;
 }
 
+.field-error {
+  margin: 2px 0 0;
+  color: #b0172a;
+  font-size: 12px;
+}
+
+.preview-status {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+  color: #5e708d;
+}
+
+.preview-status strong {
+  color: #8b5a00;
+  font-weight: 600;
+}
+
 @media (max-width: 1080px) {
   body {
     overflow: auto;
@@ -289,9 +346,33 @@ button {
 
   .workspace {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
     height: auto;
     overflow: visible;
     min-height: auto;
+  }
+
+  .workspace-mobile-tabs {
+    display: flex;
+    gap: 8px;
+  }
+
+  .workspace-mobile-tabs button {
+    flex: 1;
+  }
+
+  .workspace-mobile-tabs button.active {
+    background: #1f6feb;
+    border-color: #1f6feb;
+    color: #fff;
+  }
+
+  .workspace-pane {
+    display: none;
+  }
+
+  .workspace-pane.active {
+    display: block;
   }
 
   .editor-shell {

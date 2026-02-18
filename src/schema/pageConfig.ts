@@ -391,14 +391,33 @@ function formatIssueMessage(issue: z.ZodIssue): string {
   return "输入不符合规则，请检查后重试。";
 }
 
-export function parsePageConfig(input: unknown): PageConfig {
-  const result = pageConfigSchema.safeParse(input);
+type PageConfigValidationError = {
+  path: string;
+  message: string;
+};
 
-  if (!result.success) {
-    const message = result.error.issues
-      .map((issue) => `${formatIssuePath(issue.path)}：${formatIssueMessage(issue)}`)
-      .join("; ");
-    throw new Error(`配置校验失败：${message}`);
+export type PageConfigValidationReport =
+  | { ok: true; data: PageConfig }
+  | { ok: false; message: string; errors: PageConfigValidationError[] };
+
+export function validatePageConfig(input: unknown): PageConfigValidationReport {
+  const result = pageConfigSchema.safeParse(input);
+  if (result.success) {
+    return { ok: true, data: result.data };
+  }
+
+  const errors = result.error.issues.map((issue) => ({
+    path: issue.path.map((part) => String(part)).join("."),
+    message: `${formatIssuePath(issue.path)}：${formatIssueMessage(issue)}`
+  }));
+  const message = `配置校验失败：${errors.map((item) => item.message).join("; ")}`;
+  return { ok: false, message, errors };
+}
+
+export function parsePageConfig(input: unknown): PageConfig {
+  const result = validatePageConfig(input);
+  if (!result.ok) {
+    throw new Error(result.message);
   }
 
   return result.data;

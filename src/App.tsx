@@ -8,6 +8,8 @@ export function App() {
   const pageConfig = usePageStore((state) => state.pageConfig);
   const setPageConfig = usePageStore((state) => state.setPageConfig);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<string>("");
+  const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -22,15 +24,28 @@ export function App() {
 
   return (
     <main className="workspace">
-      <Panel
-        pageConfig={pageConfig}
-        setPageConfig={setPageConfig}
-        onUnsavedChange={setHasUnsavedChanges}
-        onExportHtml={() => {
-          exportPageAsHtmlFile(pageConfig);
-        }}
-      />
-      <Preview config={pageConfig} />
+      <div className="workspace-mobile-tabs">
+        <button type="button" className={mobileView === "editor" ? "active" : ""} onClick={() => setMobileView("editor")}>
+          编辑
+        </button>
+        <button type="button" className={mobileView === "preview" ? "active" : ""} onClick={() => setMobileView("preview")}>
+          预览
+        </button>
+      </div>
+      <section className={`workspace-pane ${mobileView === "editor" ? "active" : ""}`}>
+        <Panel
+          pageConfig={pageConfig}
+          setPageConfig={setPageConfig}
+          onUnsavedChange={setHasUnsavedChanges}
+          onSaved={setLastSavedAt}
+          onExportHtml={() => {
+            exportPageAsHtmlFile(pageConfig);
+          }}
+        />
+      </section>
+      <section className={`workspace-pane ${mobileView === "preview" ? "active" : ""}`}>
+        <Preview config={pageConfig} hasUnsavedChanges={hasUnsavedChanges} lastSavedAt={lastSavedAt} />
+      </section>
     </main>
   );
 }
